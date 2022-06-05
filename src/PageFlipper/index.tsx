@@ -1,5 +1,4 @@
 import useSetState from '@/hooks/useSetState';
-import { Box } from 'native-base';
 import React from 'react';
 import { useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
@@ -9,10 +8,10 @@ import { BookPageBackground } from './BookPageBackground';
 
 export type IPageFlipperProps = {};
 
-const PageFlipper: React.FC<IPageFlipperProps> = ({}) => {
+const PageFlipper: React.FC<IPageFlipperProps> = () => {
   const isAnimatingRef = useRef(false);
 
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
   const [state, setState] = useSetState({
     pageIndex: 0,
@@ -53,8 +52,8 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({}) => {
   const isLastPage = pageIndex === pages.length - 1;
 
   const containerSize = {
-    height: 400,
-    width,
+    height: 422,
+    width: width,
   };
 
   const bookPageProps = {
@@ -62,56 +61,60 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({}) => {
     isAnimating: false,
     zoomActive: false,
     setIsAnimating: setIsAnimating,
-    animateNext: false,
-    animatePrev: false,
     isAnimatingRef: isAnimatingRef,
     onPageFlip: onPageFlipped,
   };
 
   return (
-    <Box shadow={'7'}>
-      <View
-        style={[
-          styles.contentContainer,
-          {
-            height: containerSize.height,
-            width: containerSize.width,
+    <View
+      style={[
+        styles.contentContainer,
+        {
+          height: containerSize.height,
+          width: containerSize.width,
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: 2,
           },
-        ]}
-      >
-        <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
-          {!prev ? (
-            <Empty />
-          ) : (
-            <BookPage2
-              right={false}
-              front={current}
-              back={prev}
-              key={`left${pageIndex}`}
-              {...bookPageProps}
-            />
-          )}
-          {!next ? (
-            <Empty />
-          ) : (
-            <BookPage2
-              right
-              front={current}
-              back={next}
-              key={`right${pageIndex}`}
-              {...bookPageProps}
-            />
-          )}
-          <BookPageBackground
-            left={!prev ? current : prev}
-            right={!next ? current : next}
-            containerSize={containerSize}
-            isFirstPage={isFirstPage}
-            isLastPage={isLastPage}
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        },
+      ]}
+    >
+      <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
+        {!prev ? (
+          <Empty />
+        ) : (
+          <BookPage2
+            right={false}
+            front={current}
+            back={prev}
+            key={`left${pageIndex}`}
+            {...bookPageProps}
           />
-        </View>
+        )}
+        {!next ? (
+          <Empty />
+        ) : (
+          <BookPage2
+            right
+            front={current}
+            back={next}
+            key={`right${pageIndex}`}
+            {...bookPageProps}
+          />
+        )}
+        <BookPageBackground
+          left={!prev ? current : prev}
+          right={!next ? current : next}
+          containerSize={containerSize}
+          isFirstPage={isFirstPage}
+          isLastPage={isLastPage}
+        />
       </View>
-    </Box>
+    </View>
   );
 };
 
@@ -127,6 +130,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexDirection: 'row',
-    backgroundColor: 'grey',
+    // backgroundColor: 'grey',
   },
 });

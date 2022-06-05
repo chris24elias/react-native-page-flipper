@@ -66,7 +66,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
     easing: Easing.inOut(Easing.cubic),
   };
   const x = useSharedValue(0);
-  const y = useSharedValue(0);
   const isMounted = useRef(false);
   const rotateYAsDeg = useSharedValue(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -100,7 +99,7 @@ const BookPage2: React.FC<IBookPageProps> = ({
     }
   };
 
-  const getDegreesForXY = ({ x, y }: { x: number; y: number }) => {
+  const getDegreesForXY = ({ x }: { x: number; y: number }) => {
     'worklet';
 
     const val = interpolate(
@@ -176,12 +175,11 @@ const BookPage2: React.FC<IBookPageProps> = ({
 
   const onPanGestureHandler = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
-    { x: number; y: number }
+    { x: number }
   >({
     onStart: (event, ctx) => {
       runOnJS(onDrag)(true);
       ctx.x = x.value;
-      ctx.y = y.value;
     },
     onActive: (event, ctx) => {
       const newX = ctx.x + event.translationX;
@@ -194,10 +192,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
 
       if (IS_ANDROID || IS_WEB) {
         x.value = newX;
-        y.value = newY;
       } else {
         x.value = withTiming(newX, timingConfig2);
-        y.value = withTiming(newY, timingConfig2);
       }
 
       rotateYAsDeg.value = degrees;
@@ -370,6 +366,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     // backgroundColor: 'rgba(0,0,0,0)',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
   },
 });

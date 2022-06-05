@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     backfaceVisibility: 'hidden',
     overflow: 'hidden',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
   },
   container: {
     position: 'absolute',

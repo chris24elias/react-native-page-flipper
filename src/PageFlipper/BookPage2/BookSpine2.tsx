@@ -36,7 +36,7 @@ const shadowColors = [
 
 const BookSpine2: React.FC<IBookSpine2Props> = ({ right, containerSize, degrees }) => {
   const style = useAnimatedStyle(() => {
-    const opacity = interpolate(Math.abs(degrees.value), [0, 170, 180], [0, 0, 1]);
+    const opacity = interpolate(Math.abs(degrees.value), [0, 170, 180], [0, 0, 0.6]);
     return {
       opacity,
     };

@@ -1,32 +1,40 @@
 import useSetState from '@/hooks/useSetState';
 import React from 'react';
 import { useRef } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import { BookPage2 } from './BookPage2/BookPage2';
+import { BookPagePortrait } from './BookPage2/BookPagePortrait';
 import { BookPageBackground } from './BookPageBackground';
+import Image from './Components/Image';
+import { Size } from './types';
 
-export type IPageFlipperProps = {};
+export type IPageFlipperProps = {
+  landscape: boolean;
+  containerSize: Size;
+  data: string[];
+};
 
-const PageFlipper: React.FC<IPageFlipperProps> = () => {
-  const isAnimatingRef = useRef(false);
+const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, data }) => {
+  const getInitialPages = () => {
+    if (!landscape) {
+      const allPages = [];
 
-  const { width } = useWindowDimensions();
+      for (let i = 0; i < data.length * 2; i += 2) {
+        allPages[i] = data[i];
+        allPages[i + 1] = data[i];
+      }
+      return allPages;
+    }
+
+    return data;
+  };
 
   const [state, setState] = useSetState({
     pageIndex: 0,
-    pages: [
-      'https://i.picsum.photos/id/960/780/844.jpg?hmac=yi46RPSHaJh3LsOi_4noHPFpgB2pdTiFkfLg0YWANC8',
-      'https://i.picsum.photos/id/179/780/844.jpg?hmac=C934STbwY480q05yogaGe9v6jT5pfFxYKhj0dPpe9OE',
-      'https://i.picsum.photos/id/70/780/844.jpg?hmac=wFZE1FAacjyxQadjJcSNjDZnqeLrWvjf4t1c4g-oZws',
-      'https://i.picsum.photos/id/183/780/844.jpg?hmac=ZKyE-nRYJ4f8UvpjLhWzhNOOpIpqjU0Ve1eNoPpYF-A',
-      'https://i.picsum.photos/id/960/780/844.jpg?hmac=yi46RPSHaJh3LsOi_4noHPFpgB2pdTiFkfLg0YWANC8',
-      'https://i.picsum.photos/id/179/780/844.jpg?hmac=C934STbwY480q05yogaGe9v6jT5pfFxYKhj0dPpe9OE',
-      'https://i.picsum.photos/id/70/780/844.jpg?hmac=wFZE1FAacjyxQadjJcSNjDZnqeLrWvjf4t1c4g-oZws',
-      'https://i.picsum.photos/id/183/780/844.jpg?hmac=ZKyE-nRYJ4f8UvpjLhWzhNOOpIpqjU0Ve1eNoPpYF-A',
-    ],
+    pages: getInitialPages(),
     isAnimating: false,
   });
+  const isAnimatingRef = useRef(false);
 
   const onPageFlipped = (index: number) => {
     const newIndex = pageIndex + index;
@@ -43,18 +51,14 @@ const PageFlipper: React.FC<IPageFlipperProps> = () => {
     isAnimatingRef.current = val;
   };
 
-  const { pageIndex, pages } = state;
+  const { pageIndex } = state;
+  const pages = state.pages;
   const prev = pages[pageIndex - 1];
   const current = pages[pageIndex];
   const next = pages[pageIndex + 1];
 
   const isFirstPage = pageIndex === 0;
   const isLastPage = pageIndex === pages.length - 1;
-
-  const containerSize = {
-    height: 422,
-    width: width,
-  };
 
   const bookPageProps = {
     containerSize: containerSize,
@@ -80,40 +84,90 @@ const PageFlipper: React.FC<IPageFlipperProps> = () => {
           shadowOpacity: 0.25,
           shadowRadius: 3.84,
           elevation: 5,
+          backgroundColor: 'white',
+          // borderWidth: 2,
         },
       ]}
     >
-      <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
-        {!prev ? (
-          <Empty />
-        ) : (
-          <BookPage2
-            right={false}
-            front={current}
-            back={prev}
-            key={`left${pageIndex}`}
-            {...bookPageProps}
+      {landscape ? (
+        <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
+          {!prev ? (
+            <Empty />
+          ) : (
+            <BookPage2
+              right={false}
+              front={current}
+              back={prev}
+              key={`left${pageIndex}`}
+              {...bookPageProps}
+            />
+          )}
+          {!next ? (
+            <Empty />
+          ) : (
+            <BookPage2
+              right
+              front={current}
+              back={next}
+              key={`right${pageIndex}`}
+              {...bookPageProps}
+            />
+          )}
+          <BookPageBackground
+            left={!prev ? current : prev}
+            right={!next ? current : next}
+            containerSize={containerSize}
+            isFirstPage={isFirstPage}
+            isLastPage={isLastPage}
           />
-        )}
-        {!next ? (
-          <Empty />
-        ) : (
-          <BookPage2
-            right
-            front={current}
-            back={next}
-            key={`right${pageIndex}`}
-            {...bookPageProps}
-          />
-        )}
-        <BookPageBackground
-          left={!prev ? current : prev}
-          right={!next ? current : next}
-          containerSize={containerSize}
-          isFirstPage={isFirstPage}
-          isLastPage={isLastPage}
-        />
-      </View>
+        </View>
+      ) : (
+        <View style={{ flex: 1, overflow: 'hidden' }}>
+          <View style={{ ...StyleSheet.absoluteFillObject }}>
+            <BookPagePortrait
+              current={current}
+              prev={prev}
+              onPageFlip={onPageFlipped}
+              key={`right${pageIndex}`}
+              containerSize={containerSize}
+              isAnimating={state.isAnimating}
+              pageIndex={state.pageIndex}
+              setIsAnimating={setIsAnimating}
+              zoomActive={false}
+            />
+          </View>
+          {next ? (
+            <View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                zIndex: -5,
+                overflow: 'hidden',
+              }}
+            >
+              <Image
+                source={{ uri: next }}
+                style={{
+                  height: containerSize.height,
+                  width: containerSize.width * 2,
+                  right: pageIndex % 2 === 0 ? containerSize.width : 0,
+                  backgroundColor: 'white',
+                }}
+              />
+            </View>
+          ) : (
+            <View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                zIndex: -5,
+                overflow: 'hidden',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#FFF',
+              }}
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 };

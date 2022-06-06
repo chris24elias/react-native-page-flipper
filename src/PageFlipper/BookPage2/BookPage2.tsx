@@ -366,6 +366,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     // backgroundColor: 'rgba(0,0,0,0)',
-    // backgroundColor: 'white',
+    backgroundColor: 'white',
   },
 });

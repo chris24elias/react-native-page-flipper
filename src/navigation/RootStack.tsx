@@ -8,7 +8,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const RootStack: React.FC = () => {
   return (
     <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen
+        name="Home"
+        component={Home}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 };

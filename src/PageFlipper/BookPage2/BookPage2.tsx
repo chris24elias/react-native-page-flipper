@@ -14,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import Image from '../Components/Image';
 import { Size } from '../types';
-import { usePerspective } from '../hooks/usePerspective';
 import BackShadow from './BackShadow';
 import FrontShadow from './FrontShadow';
 import PageShadow from './PageShadow';
@@ -35,6 +34,23 @@ export type IBookPageProps = {
   enabled: boolean;
 };
 
+export const diffClamp = (val: number, min: number, max: number) => {
+  'worklet';
+
+  if (val >= max) {
+    return max;
+  }
+  if (val <= min) {
+    return min;
+  }
+  return val;
+};
+
+const timingConfig: WithTimingConfig = {
+  duration: 800,
+  easing: Easing.inOut(Easing.cubic),
+};
+
 const BookPage2: React.FC<IBookPageProps> = ({
   right,
   front,
@@ -46,18 +62,12 @@ const BookPage2: React.FC<IBookPageProps> = ({
   isAnimating,
   enabled,
 }) => {
-  const tapRef = useRef(null);
-  const panRef = useRef(null);
   const containerWidth = containerSize.width;
 
   const leftPSnapPoints = [0, containerSize.width];
   const rightPSnapPoints = [-containerSize.width, 0];
   const pSnapPoints = right ? rightPSnapPoints : leftPSnapPoints;
 
-  const timingConfig: WithTimingConfig = {
-    duration: 800,
-    easing: Easing.inOut(Easing.cubic),
-  };
   const x = useSharedValue(0);
   const isMounted = useRef(false);
   const rotateYAsDeg = useSharedValue(0);
@@ -87,13 +97,7 @@ const BookPage2: React.FC<IBookPageProps> = ({
     });
   };
 
-  // const onSingleTap = (event: HandlerStateChangeEvent<TapGestureHandlerEventPayload>) => {
-  //   if (event.nativeEvent.state === State.ACTIVE) {
-  //     if (!isAnimatingRef.current) turnPage();
-  //   }
-  // };
-
-  const getDegreesForXY = ({ x }: { x: number; y: number }) => {
+  const getDegreesForX = ({ x }: { x: number }) => {
     'worklet';
 
     const val = interpolate(
@@ -104,8 +108,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
     );
     return val;
   };
-
-  const { backPerspective, frontPerspective } = usePerspective({ isLandscape: true });
 
   const onDrag = useCallback((val: boolean) => {
     if (!isMounted.current) {
@@ -118,15 +120,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
     }
   }, []);
 
-  const getOpacity = (rotation: number) => {
-    'worklet';
-
-    const opacity = IS_ANDROID ? (rotation >= -90 && rotation < 90 ? 1 : 0) : 1;
-    const backOpacity = IS_ANDROID ? (opacity === 1 ? 0 : 1) : 1;
-
-    return { opacity, backOpacity };
-  };
-
   const backStyle = useAnimatedStyle(() => {
     const val = rotateYAsDeg.value;
     const x = right
@@ -137,26 +130,28 @@ const BookPage2: React.FC<IBookPageProps> = ({
       ? interpolate(val, [0, 180], [0, containerWidth / 2])
       : interpolate(val, [-180, 0], [containerWidth / 2, 0]);
     return {
-      width: w,
+      width: Math.ceil(w),
       zIndex: 2,
-      opacity: 1,
-      transform: [backPerspective, { translateX: x }],
+      transform: [{ translateX: x }],
     };
   });
 
   const frontStyle = useAnimatedStyle(() => {
-    const { opacity } = getOpacity(rotateYAsDeg.value);
-
-    const val = Math.floor(rotateYAsDeg.value);
-    const w = right
-      ? interpolate(val, [0, 160], [containerWidth / 2, -20])
-      : interpolate(val, [-160, 0], [-20, containerWidth / 2]);
+    const val = rotateYAsDeg.value;
+    let w;
+    if (IS_WEB) {
+      w = right
+        ? interpolate(val, [0, 180], [containerWidth / 2, 0])
+        : interpolate(val, [-180, 0], [0, containerWidth / 2]);
+    } else {
+      w = right
+        ? interpolate(val, [0, 160], [containerWidth / 2, -20])
+        : interpolate(val, [-160, 0], [-20, containerWidth / 2]);
+    }
 
     return {
-      opacity,
       zIndex: 1,
       width: Math.floor(w),
-      transform: [frontPerspective],
     };
   });
 
@@ -177,18 +172,18 @@ const BookPage2: React.FC<IBookPageProps> = ({
     },
     onActive: (event, ctx) => {
       const newX = ctx.x + event.translationX;
-      const newY = ctx.y + event.translationY;
-      const timingConfig2 = {
-        duration: 30,
-      };
 
-      const degrees = getDegreesForXY({ x: newX, y: newY });
+      // const timingConfig2 = {
+      //   duration: 30,
+      // };
 
-      if (IS_ANDROID || IS_WEB) {
-        x.value = newX;
-      } else {
-        x.value = withTiming(newX, timingConfig2);
-      }
+      const degrees = getDegreesForX({ x: newX });
+
+      // if (IS_ANDROID || IS_WEB) {
+      x.value = newX;
+      // } else {
+      // x.value = withTiming(newX, timingConfig2);
+      // }
 
       rotateYAsDeg.value = degrees;
     },
@@ -197,23 +192,18 @@ const BookPage2: React.FC<IBookPageProps> = ({
 
       const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
 
-      const degrees = getDegreesForXY({ x: snapTo, y: 0 });
+      const degrees = getDegreesForX({ x: snapTo });
 
       x.value = snapTo;
 
       if (rotateYAsDeg.value === degrees) {
-        // already same value
-        // debugValue('already there');
         runOnJS(onPageFlip)(id, false);
       } else {
         runOnJS(setIsAnimating)(true);
 
         const progress = Math.abs(rotateYAsDeg.value - degrees) / 100;
 
-        const duration = 800 * progress - Math.abs(0.1 * event.velocityX);
-
-        // console.log('PROGRESS', progress);
-        console.log('duration', duration);
+        const duration = diffClamp(800 * progress - Math.abs(0.1 * event.velocityX), 200, 1000);
 
         rotateYAsDeg.value = withTiming(
           degrees,
@@ -271,25 +261,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
   }
 
   return (
-    // <TapGestureHandler
-    //   numberOfTaps={1}
-    //   onHandlerStateChange={onSingleTap}
-    //   ref={tapRef}
-    //   waitFor={panRef}
-    //   enabled={gesturesEnabled}
-    //   hitSlop={
-    //     right
-    //       ? { right: 0, width: containerSize.width / 4 }
-    //       : { left: 0, width: containerSize.width / 4 }
-    //   }
-    // >
     <Animated.View style={containerStyle}>
-      <PanGestureHandler
-        simultaneousHandlers={tapRef}
-        onGestureEvent={onPanGestureHandler}
-        enabled={gesturesEnabled}
-        ref={panRef}
-      >
+      <PanGestureHandler onGestureEvent={onPanGestureHandler} enabled={gesturesEnabled}>
         <Animated.View style={containerStyle}>
           <Pressable
             onPress={() => {
@@ -341,6 +314,10 @@ const BookPage2: React.FC<IBookPageProps> = ({
                 viewHeight: containerSize.height,
               }}
             />
+
+            {showSpine && (
+              <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
+            )}
           </Animated.View>
           {/* FRONT */}
           <Animated.View
@@ -363,14 +340,9 @@ const BookPage2: React.FC<IBookPageProps> = ({
             )}
             {showSpine && <BookSpine right={right} containerSize={containerSize} />}
           </Animated.View>
-
-          {showSpine && (
-            <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
-          )}
         </Animated.View>
       </PanGestureHandler>
     </Animated.View>
-    // </TapGestureHandler>
   );
 };
 

@@ -41,7 +41,7 @@ const BookSpine: React.FC<IBookSpineProps> = ({ right, containerSize }) => {
         {
           position: 'absolute',
           height: '100%',
-          width: containerSize.width / 4,
+          width: containerSize.width / 2,
           zIndex: 1,
           opacity: 0.6,
         },

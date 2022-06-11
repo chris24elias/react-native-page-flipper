@@ -78,8 +78,6 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({
     onPageFlip: onPageFlipped,
   };
 
-  console.log('STATE', state.isAnimating);
-
   return (
     <View
       style={[
@@ -96,7 +94,6 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({
           shadowRadius: 3.84,
           elevation: 5,
           backgroundColor: 'white',
-          // borderWidth: 2,
         },
       ]}
     >

@@ -36,11 +36,31 @@ const shadowColors = [
 
 const BookSpine2: React.FC<IBookSpine2Props> = ({ right, containerSize, degrees }) => {
   const style = useAnimatedStyle(() => {
-    const opacity = interpolate(Math.abs(degrees.value), [0, 170, 180], [0, 0, 0.6]);
+    const opacity = interpolate(Math.abs(degrees.value), [0, 150, 180], [0, 0, 0.6]);
     return {
       opacity,
     };
   });
+
+  const position1 = right
+    ? {
+        start: { x: 1, y: 0 },
+        end: { x: 0, y: 0 },
+      }
+    : {
+        start: { x: 0, y: 0 },
+        end: { x: 1, y: 0 },
+      };
+
+  const position2 = !right
+    ? {
+        start: { x: 1, y: 0 },
+        end: { x: 0, y: 0 },
+      }
+    : {
+        start: { x: 0, y: 0 },
+        end: { x: 1, y: 0 },
+      };
 
   return (
     <Animated.View
@@ -49,31 +69,32 @@ const BookSpine2: React.FC<IBookSpine2Props> = ({ right, containerSize, degrees 
         {
           position: 'absolute',
           height: '100%',
-          width: containerSize.width,
+          width: '100%',
           zIndex: 10000000,
           flexDirection: 'row',
         },
-        right ? { left: -containerSize.width / 4 } : { left: containerSize.width / 4 },
         style,
       ]}
     >
       <Gradient
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0, y: 0 }}
+        {...position1}
         colors={shadowColors}
         style={{
-          width: containerSize.width / 4,
+          width: '100%',
           height: '100%',
         }}
       />
       <Gradient
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        {...position2}
         colors={shadowColors}
-        style={{
-          width: containerSize.width / 4,
-          height: '100%',
-        }}
+        style={[
+          {
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+          },
+          right ? { left: '100%' } : { right: '100%' },
+        ]}
       />
     </Animated.View>
   );

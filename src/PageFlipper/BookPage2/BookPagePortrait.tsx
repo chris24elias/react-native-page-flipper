@@ -25,18 +25,18 @@ import { Size } from '../types';
 import BackShadow from './BackShadow';
 import FrontShadow from './FrontShadow';
 import PageShadow from './PageShadow';
-import { IS_WEB } from '@/utils/Constants';
 import { snapPoint } from '../utils/utils';
 
 export type IBookPageProps = {
   current: string;
   prev: string;
   onPageFlip: any;
-  containerSize;
-  zoomActive;
-  setIsAnimating;
-  pageIndex;
-  isAnimating;
+  containerSize: Size;
+
+  setIsAnimating: (val: boolean) => void;
+  pageIndex: number;
+  isAnimating: boolean;
+  enabled: boolean;
 };
 
 const BookPagePortrait: React.FC<IBookPageProps> = ({
@@ -44,7 +44,7 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
   prev,
   onPageFlip,
   containerSize,
-  zoomActive,
+  enabled,
   setIsAnimating,
   pageIndex,
   isAnimating,
@@ -67,11 +67,12 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
   const rotateYAsDeg = useSharedValue(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
-    if (!zoomActive) {
-      setIsDragging(false);
-    }
-  }, [zoomActive]);
+  // might not need this
+  // useEffect(() => {
+  //   if (!enabled) {
+  //     setIsDragging(false);
+  //   }
+  // }, [enabled]);
 
   const turnPage = (id: 1 | -1) => {
     setIsDragging(true);
@@ -168,7 +169,7 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
     },
   });
 
-  const gesturesEnabled = !zoomActive && !isAnimating;
+  const gesturesEnabled = enabled && !isAnimating;
   const getBookImageStyle = (right: boolean, front: boolean) => {
     const imageStyle: any = {
       height: Math.round(containerSize.height),
@@ -209,7 +210,7 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
       onHandlerStateChange={onSingleTap}
       ref={tapRef}
       // simultaneousHandlers={[panRef]}
-      waitFor={IS_WEB ? undefined : panRef}
+      waitFor={panRef}
       enabled={gesturesEnabled}
       // hitSlop={{ right: 0, width: containerSize.width / 4 }}
     >

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import {
   HandlerStateChangeEvent,
   PanGestureHandler,
@@ -36,10 +36,10 @@ export type IBookPageProps = {
   back: string;
   onPageFlip: any;
   containerSize: Size;
-  zoomActive: boolean;
   isAnimatingRef: React.MutableRefObject<boolean>;
   setIsAnimating: (val: boolean) => void;
   isAnimating: boolean;
+  enabled: boolean;
 };
 
 const BookPage2: React.FC<IBookPageProps> = ({
@@ -48,10 +48,10 @@ const BookPage2: React.FC<IBookPageProps> = ({
   back,
   onPageFlip,
   containerSize,
-  zoomActive,
   isAnimatingRef,
   setIsAnimating,
   isAnimating,
+  enabled,
 }) => {
   const tapRef = useRef(null);
   const panRef = useRef(null);
@@ -70,11 +70,12 @@ const BookPage2: React.FC<IBookPageProps> = ({
   const rotateYAsDeg = useSharedValue(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
-    if (!zoomActive) {
-      setIsDragging(false);
-    }
-  }, [zoomActive]);
+  // might not need this useEffect
+  // useEffect(() => {
+  //   if (!enabled) {
+  //     setIsDragging(false);
+  //   }
+  // }, [enabled]);
 
   useEffect(() => {
     isMounted.current = true;
@@ -93,11 +94,11 @@ const BookPage2: React.FC<IBookPageProps> = ({
     });
   };
 
-  const onSingleTap = (event: HandlerStateChangeEvent<TapGestureHandlerEventPayload>) => {
-    if (event.nativeEvent.state === State.ACTIVE) {
-      if (!isAnimatingRef.current) turnPage();
-    }
-  };
+  // const onSingleTap = (event: HandlerStateChangeEvent<TapGestureHandlerEventPayload>) => {
+  //   if (event.nativeEvent.state === State.ACTIVE) {
+  //     if (!isAnimatingRef.current) turnPage();
+  //   }
+  // };
 
   const getDegreesForXY = ({ x }: { x: number; y: number }) => {
     'worklet';
@@ -213,12 +214,27 @@ const BookPage2: React.FC<IBookPageProps> = ({
         runOnJS(onPageFlip)(id, false);
       } else {
         runOnJS(setIsAnimating)(true);
-        rotateYAsDeg.value = withTiming(degrees, timingConfig, () => {
-          if (snapTo === 0) {
-            runOnJS(onDrag)(false);
-          }
-          runOnJS(onPageFlip)(id, false);
-        });
+
+        const progress = Math.abs(rotateYAsDeg.value - degrees) / 100;
+
+        const duration = 800 * progress - Math.abs(0.1 * event.velocityX);
+
+        // console.log('PROGRESS', progress);
+        console.log('duration', duration);
+
+        rotateYAsDeg.value = withTiming(
+          degrees,
+          {
+            ...timingConfig,
+            duration: duration,
+          },
+          () => {
+            if (snapTo === 0) {
+              runOnJS(onDrag)(false);
+            }
+            runOnJS(onPageFlip)(id, false);
+          },
+        );
       }
     },
   });
@@ -254,7 +270,7 @@ const BookPage2: React.FC<IBookPageProps> = ({
     };
   });
 
-  const gesturesEnabled = !zoomActive && !isAnimating;
+  const gesturesEnabled = enabled && !isAnimating;
   const showSpine = true;
 
   if (!front || !back) {
@@ -262,73 +278,60 @@ const BookPage2: React.FC<IBookPageProps> = ({
   }
 
   return (
-    <TapGestureHandler
-      numberOfTaps={1}
-      onHandlerStateChange={onSingleTap}
-      ref={tapRef}
-      waitFor={IS_WEB ? undefined : panRef}
-      enabled={gesturesEnabled}
-      hitSlop={
-        right
-          ? { right: 0, width: containerSize.width / 4 }
-          : { left: 0, width: containerSize.width / 4 }
-      }
-    >
-      <Animated.View style={containerStyle}>
-        <PanGestureHandler
-          simultaneousHandlers={tapRef}
-          onGestureEvent={onPanGestureHandler}
-          enabled={IS_WEB ? false : gesturesEnabled}
-          ref={panRef}
-        >
-          <Animated.View style={containerStyle}>
-            {/* BACK */}
-            <Animated.View style={[styles.imageContainer, backStyle, { overflow: 'visible' }]}>
-              <View style={styles.imageContainer}>
-                {back ? (
-                  <Image
-                    source={{
-                      uri: back,
-                    }}
-                    style={[backImageStyle, animatedBackImageStyle]}
-                  />
-                ) : (
-                  <BlankPage />
-                )}
-              </View>
+    // <TapGestureHandler
+    //   numberOfTaps={1}
+    //   onHandlerStateChange={onSingleTap}
+    //   ref={tapRef}
+    //   waitFor={panRef}
+    //   enabled={gesturesEnabled}
+    //   hitSlop={
+    //     right
+    //       ? { right: 0, width: containerSize.width / 4 }
+    //       : { left: 0, width: containerSize.width / 4 }
+    //   }
+    // >
+    <Animated.View style={containerStyle}>
+      <PanGestureHandler
+        simultaneousHandlers={tapRef}
+        onGestureEvent={onPanGestureHandler}
+        enabled={gesturesEnabled}
+        ref={panRef}
+      >
+        <Animated.View style={containerStyle}>
+          <Pressable
+            onPress={() => {
+              if (!isAnimatingRef.current) turnPage();
+            }}
+            style={[
+              {
+                position: 'absolute',
+                height: '100%',
+                width: '50%',
+                // backgroundColor: 'red',
+                // opacity: 0,
+                zIndex: 10000,
+              },
+              right ? { right: 0 } : { left: 0 },
+            ]}
+          />
 
-              <BackShadow {...{ degrees: rotateYAsDeg, right }} />
-              <FrontShadow
-                {...{
-                  right,
-                  degrees: rotateYAsDeg,
-                  width: containerSize.width,
-                  viewHeight: containerSize.height,
-                }}
-              />
-            </Animated.View>
-            {/* FRONT */}
-            <Animated.View
-              style={[styles.imageContainer, frontStyle, right ? { left: 0 } : { right: 0 }]}
-            >
-              {front ? (
+          {/* BACK */}
+          <Animated.View style={[styles.imageContainer, backStyle, { overflow: 'visible' }]}>
+            <View style={styles.imageContainer}>
+              {back ? (
                 <Image
                   source={{
-                    uri: front,
+                    uri: back,
                   }}
-                  style={[
-                    frontImageStyle,
-                    right
-                      ? { left: -containerSize.width / 2 }
-                      : { right: -containerSize.width / 2, left: undefined },
-                  ]}
+                  style={[backImageStyle, animatedBackImageStyle]}
                 />
               ) : (
                 <BlankPage />
               )}
-              {showSpine && <BookSpine right={right} containerSize={containerSize} />}
-            </Animated.View>
-            <PageShadow
+            </View>
+
+            <BackShadow {...{ degrees: rotateYAsDeg, right }} />
+            <FrontShadow
               {...{
                 right,
                 degrees: rotateYAsDeg,
@@ -336,14 +339,44 @@ const BookPage2: React.FC<IBookPageProps> = ({
                 viewHeight: containerSize.height,
               }}
             />
-
-            {showSpine && (
-              <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
-            )}
           </Animated.View>
-        </PanGestureHandler>
-      </Animated.View>
-    </TapGestureHandler>
+          {/* FRONT */}
+          <Animated.View
+            style={[styles.imageContainer, frontStyle, right ? { left: 0 } : { right: 0 }]}
+          >
+            {front ? (
+              <Image
+                source={{
+                  uri: front,
+                }}
+                style={[
+                  frontImageStyle,
+                  right
+                    ? { left: -containerSize.width / 2 }
+                    : { right: -containerSize.width / 2, left: undefined },
+                ]}
+              />
+            ) : (
+              <BlankPage />
+            )}
+            {showSpine && <BookSpine right={right} containerSize={containerSize} />}
+          </Animated.View>
+          <PageShadow
+            {...{
+              right,
+              degrees: rotateYAsDeg,
+              width: containerSize.width,
+              viewHeight: containerSize.height,
+            }}
+          />
+
+          {showSpine && (
+            <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
+          )}
+        </Animated.View>
+      </PanGestureHandler>
+    </Animated.View>
+    // </TapGestureHandler>
   );
 };
 

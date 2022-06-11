@@ -2,19 +2,26 @@ import useSetState from '@/hooks/useSetState';
 import React from 'react';
 import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BookPage2 } from './BookPage2/BookPage2';
+import { BookPage2, IBookPageProps } from './BookPage2/BookPage2';
 import { BookPagePortrait } from './BookPage2/BookPagePortrait';
 import { BookPageBackground } from './BookPageBackground';
 import Image from './Components/Image';
 import { Size } from './types';
+import cacheImages from './utils/cacheImages';
 
 export type IPageFlipperProps = {
   landscape: boolean;
   containerSize: Size;
   data: string[];
+  enabled?: boolean;
 };
 
-const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, data }) => {
+const PageFlipper: React.FC<IPageFlipperProps> = ({
+  landscape,
+  containerSize,
+  data,
+  enabled = true,
+}) => {
   const getInitialPages = () => {
     if (!landscape) {
       const allPages = [];
@@ -25,7 +32,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, da
       }
       return allPages;
     }
-
+    cacheImages(data.map((uri) => ({ uri })));
     return data;
   };
 
@@ -62,10 +69,10 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, da
   const isFirstPage = pageIndex === 0;
   const isLastPage = pageIndex === pages.length - 1;
 
-  const bookPageProps = {
+  const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> = {
     containerSize: containerSize,
     isAnimating: state.isAnimating,
-    zoomActive: false,
+    enabled,
     setIsAnimating: setIsAnimating,
     isAnimatingRef: isAnimatingRef,
     onPageFlip: onPageFlipped,

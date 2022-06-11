@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import {
-  HandlerStateChangeEvent,
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-  State,
-  TapGestureHandler,
-  TapGestureHandlerEventPayload,
-} from 'react-native-gesture-handler';
+import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolate,
@@ -339,6 +332,15 @@ const BookPage2: React.FC<IBookPageProps> = ({
                 viewHeight: containerSize.height,
               }}
             />
+
+            <PageShadow
+              {...{
+                right,
+                degrees: rotateYAsDeg,
+                width: containerSize.width,
+                viewHeight: containerSize.height,
+              }}
+            />
           </Animated.View>
           {/* FRONT */}
           <Animated.View
@@ -361,14 +363,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
             )}
             {showSpine && <BookSpine right={right} containerSize={containerSize} />}
           </Animated.View>
-          <PageShadow
-            {...{
-              right,
-              degrees: rotateYAsDeg,
-              width: containerSize.width,
-              viewHeight: containerSize.height,
-            }}
-          />
 
           {showSpine && (
             <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
@@ -399,6 +393,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     // backgroundColor: 'rgba(0,0,0,0)',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
   },
 });

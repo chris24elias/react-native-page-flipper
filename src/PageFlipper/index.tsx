@@ -37,22 +37,24 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, da
   const isAnimatingRef = useRef(false);
 
   const onPageFlipped = (index: number) => {
+    console.log('on page flipped');
     const newIndex = pageIndex + index;
     setState({
       pageIndex: newIndex,
+      isAnimating: false,
     });
-    setIsAnimating(false);
+    isAnimatingRef.current = false;
   };
 
   const setIsAnimating = (val: boolean) => {
+    console.log('setting is animating', val);
     setState({
       isAnimating: val,
     });
     isAnimatingRef.current = val;
   };
 
-  const { pageIndex } = state;
-  const pages = state.pages;
+  const { pageIndex, pages } = state;
   const prev = pages[pageIndex - 1];
   const current = pages[pageIndex];
   const next = pages[pageIndex + 1];
@@ -62,12 +64,14 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, da
 
   const bookPageProps = {
     containerSize: containerSize,
-    isAnimating: false,
+    isAnimating: state.isAnimating,
     zoomActive: false,
     setIsAnimating: setIsAnimating,
     isAnimatingRef: isAnimatingRef,
     onPageFlip: onPageFlipped,
   };
+
+  console.log('STATE', state.isAnimating);
 
   return (
     <View
@@ -119,6 +123,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, da
             containerSize={containerSize}
             isFirstPage={isFirstPage}
             isLastPage={isLastPage}
+            pageIndex={state.pageIndex}
           />
         </View>
       ) : (
@@ -127,13 +132,8 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, containerSize, da
             <BookPagePortrait
               current={current}
               prev={prev}
-              onPageFlip={onPageFlipped}
               key={`right${pageIndex}`}
-              containerSize={containerSize}
-              isAnimating={state.isAnimating}
-              pageIndex={state.pageIndex}
-              setIsAnimating={setIsAnimating}
-              zoomActive={false}
+              {...bookPageProps}
             />
           </View>
           {next ? (

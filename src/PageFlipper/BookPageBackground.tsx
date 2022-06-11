@@ -10,6 +10,7 @@ type IBookPageBackgroundProps = {
   isFirstPage: boolean;
   isLastPage: boolean;
   containerSize: Size;
+  pageIndex: number;
 };
 
 const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
@@ -19,25 +20,10 @@ const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
   isLastPage,
   containerSize,
 }) => {
-  const getBookImageStyle = (right: boolean, front: boolean) => {
-    const imageStyle: any = {
-      height: Math.round(containerSize.height),
-      width: Math.round(containerSize.width),
-      position: 'absolute',
-    };
-
-    if (right && front) {
-      imageStyle['left'] = Math.round(-containerSize.width / 2);
-    } else if (!right && !front) {
-      imageStyle['left'] = Math.round(-containerSize.width / 2);
-    } else {
-      imageStyle['left'] = 0;
-    }
-
-    return imageStyle;
+  const size = {
+    height: containerSize.height,
+    width: containerSize.width,
   };
-  const leftImageStyle = getBookImageStyle(false, true);
-  const rightImageStyle = getBookImageStyle(true, true);
 
   if (!left || !right) {
     return null;
@@ -45,17 +31,29 @@ const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.col}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: left }} style={leftImageStyle} />
-          {isFirstPage && <BookSpine right={false} containerSize={containerSize} />}
-        </View>
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: left }}
+          style={[
+            size,
+            {
+              left: 0,
+            },
+          ]}
+        />
+        {isFirstPage && <BookSpine right={false} containerSize={containerSize} />}
       </View>
-      <View style={styles.col}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: right }} style={rightImageStyle} />
-          {isLastPage && <BookSpine right={true} containerSize={containerSize} />}
-        </View>
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: right }}
+          style={[
+            size,
+            {
+              left: -containerSize.width / 2,
+            },
+          ]}
+        />
+        {isLastPage && <BookSpine right={true} containerSize={containerSize} />}
       </View>
     </View>
   );
@@ -65,7 +63,7 @@ export { BookPageBackground };
 
 const styles = StyleSheet.create({
   imageContainer: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     backfaceVisibility: 'hidden',
     overflow: 'hidden',
     justifyContent: 'center',
@@ -77,9 +75,5 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%',
     flexDirection: 'row',
-  },
-  col: {
-    flex: 1,
-    overflow: 'hidden',
   },
 });

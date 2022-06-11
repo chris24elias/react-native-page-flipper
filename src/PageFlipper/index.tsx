@@ -72,11 +72,16 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
   };
 
   const getContainerSize = () => {
-    const { realImageSize } = state;
-    let containerSize: Size;
+    const size = { ...state.realImageSize };
 
-    if (state.realImageSize.height > state.realImageSize.width) {
-      const ratio = realImageSize.height / realImageSize.width;
+    if (!landscape) {
+      size.width = size.width / 2;
+    }
+
+    let containerSize: Size;
+    const ratio = size.height / size.width;
+
+    if (size.height > size.width) {
       containerSize = {
         height: width * ratio,
         width,
@@ -88,7 +93,6 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
         containerSize.width = containerSize.width / diff;
       }
     } else {
-      const ratio = realImageSize.width / realImageSize.height;
       containerSize = {
         height,
         width: height * ratio,
@@ -142,6 +146,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
     setIsAnimating: setIsAnimating,
     isAnimatingRef: isAnimatingRef,
     onPageFlip: onPageFlipped,
+    pageIndex,
   };
 
   return (

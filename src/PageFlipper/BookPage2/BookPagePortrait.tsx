@@ -323,6 +323,7 @@ const IPage: React.FC<IPageProps> = ({
         </View>
         <BackShadow {...{ degrees: rotationVal, right: true }} />
         <FrontShadow {...shadowProps} />
+        <PageShadow {...shadowProps} />
       </Animated.View>
       {/* FRONT */}
       <Animated.View style={[styles.imageContainer, portraitFrontStyle, {}]}>
@@ -333,7 +334,6 @@ const IPage: React.FC<IPageProps> = ({
           style={[frontImageStyle]}
         />
       </Animated.View>
-      <PageShadow {...shadowProps} />
     </View>
   );
 };

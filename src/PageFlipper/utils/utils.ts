@@ -5,18 +5,14 @@ import type { TransformsStyle } from 'react-native';
 
 export const getImageSize = (uri: string): Promise<Size> =>
   new Promise((resolve, reject) =>
-    Image.getSize(uri, (width, height) => resolve({ width, height }), reject)
+    Image.getSize(uri, (width, height) => resolve({ width, height }), reject),
   );
-
-export const getImageSizeRatio = ({ height, width }: Size) => {
-  return height > width ? height / width : width / height;
-};
 
 type RNTransform = Exclude<TransformsStyle['transform'], undefined>;
 
 export const transformOrigin = (
   { x, y }: { x: number; y: number },
-  transformations: RNTransform
+  transformations: RNTransform,
 ): RNTransform => {
   'worklet';
   return [
@@ -24,7 +20,7 @@ export const transformOrigin = (
     { translateY: y },
     ...transformations,
     { translateX: -x },
-    { translateY: -y }
+    { translateY: -y },
   ];
 };
 
@@ -40,7 +36,7 @@ export const debugValue = (msg: string, val: any) => {
 export const snapPoint = (
   value: number,
   velocity: number,
-  points: ReadonlyArray<number>
+  points: ReadonlyArray<number>,
 ): number => {
   'worklet';
 

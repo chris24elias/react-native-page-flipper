@@ -20,7 +20,7 @@ import PageShadow from './PageShadow';
 import { BookSpine } from './BookSpine';
 import { BookSpine2 } from './BookSpine2';
 import { snapPoint } from '../utils/utils';
-import { IS_ANDROID, IS_WEB } from '@/utils/Constants';
+import { IS_WEB } from '@/utils/Constants';
 
 export type IBookPageProps = {
   right: boolean;
@@ -62,16 +62,17 @@ const BookPage2: React.FC<IBookPageProps> = ({
   isAnimating,
   enabled,
 }) => {
-  const containerWidth = containerSize.width;
-
-  const leftPSnapPoints = [0, containerSize.width];
-  const rightPSnapPoints = [-containerSize.width, 0];
-  const pSnapPoints = right ? rightPSnapPoints : leftPSnapPoints;
-
   const x = useSharedValue(0);
   const isMounted = useRef(false);
   const rotateYAsDeg = useSharedValue(0);
   const [isDragging, setIsDragging] = useState(false);
+  const containerWidth = containerSize.width;
+  const containerHeight = containerSize.height;
+  const leftPSnapPoints = [0, containerWidth];
+  const rightPSnapPoints = [-containerWidth, 0];
+  const pSnapPoints = right ? rightPSnapPoints : leftPSnapPoints;
+  const gesturesEnabled = enabled && !isAnimating;
+  const showSpine = true;
 
   // might not need this useEffect
   // useEffect(() => {
@@ -97,18 +98,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
     });
   };
 
-  const getDegreesForX = ({ x }: { x: number }) => {
-    'worklet';
-
-    const val = interpolate(
-      x,
-      [-containerSize.width, 0, containerSize.width],
-      [180, 0, -180],
-      Extrapolate.CLAMP,
-    );
-    return val;
-  };
-
   const onDrag = useCallback((val: boolean) => {
     if (!isMounted.current) {
       return;
@@ -121,14 +110,14 @@ const BookPage2: React.FC<IBookPageProps> = ({
   }, []);
 
   const backStyle = useAnimatedStyle(() => {
-    const val = rotateYAsDeg.value;
+    const degrees = rotateYAsDeg.value;
     const x = right
-      ? interpolate(val, [0, 180], [containerWidth / 2, -containerWidth / 2])
-      : interpolate(val, [-180, 0], [containerWidth / 2, 0]);
+      ? interpolate(degrees, [0, 180], [containerWidth / 2, -containerWidth / 2])
+      : interpolate(degrees, [-180, 0], [containerWidth / 2, 0]);
 
     const w = right
-      ? interpolate(val, [0, 180], [0, containerWidth / 2])
-      : interpolate(val, [-180, 0], [containerWidth / 2, 0]);
+      ? interpolate(degrees, [0, 180], [0, containerWidth / 2])
+      : interpolate(degrees, [-180, 0], [containerWidth / 2, 0]);
     return {
       width: Math.ceil(w),
       zIndex: 2,
@@ -137,17 +126,11 @@ const BookPage2: React.FC<IBookPageProps> = ({
   });
 
   const frontStyle = useAnimatedStyle(() => {
-    const val = rotateYAsDeg.value;
-    let w;
-    if (IS_WEB) {
-      w = right
-        ? interpolate(val, [0, 180], [containerWidth / 2, 0])
-        : interpolate(val, [-180, 0], [0, containerWidth / 2]);
-    } else {
-      w = right
-        ? interpolate(val, [0, 160], [containerWidth / 2, -20])
-        : interpolate(val, [-160, 0], [-20, containerWidth / 2]);
-    }
+    const degrees = rotateYAsDeg.value;
+
+    const w = right
+      ? interpolate(degrees, [0, 90], [containerWidth / 2, 0], Extrapolate.CLAMP)
+      : interpolate(degrees, [-90, 0], [0, containerWidth / 2], Extrapolate.CLAMP);
 
     return {
       zIndex: 1,
@@ -162,6 +145,16 @@ const BookPage2: React.FC<IBookPageProps> = ({
     };
   });
 
+  const animatedBackImageStyle = useAnimatedStyle(() => {
+    const l = right
+      ? 0
+      : interpolate(rotateYAsDeg.value, [-180, 0], [-containerWidth / 2, -containerWidth]);
+
+    return {
+      left: l,
+    };
+  });
+
   const onPanGestureHandler = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
     { x: number }
@@ -171,29 +164,18 @@ const BookPage2: React.FC<IBookPageProps> = ({
       ctx.x = x.value;
     },
     onActive: (event, ctx) => {
-      const newX = ctx.x + event.translationX;
-
-      // const timingConfig2 = {
-      //   duration: 30,
-      // };
-
-      const degrees = getDegreesForX({ x: newX });
-
-      // if (IS_ANDROID || IS_WEB) {
-      x.value = newX;
-      // } else {
-      // x.value = withTiming(newX, timingConfig2);
-      // }
-
-      rotateYAsDeg.value = degrees;
+      x.value = ctx.x + event.translationX;
+      rotateYAsDeg.value = interpolate(
+        x.value,
+        [-containerWidth, 0, containerWidth],
+        [180, 0, -180],
+        Extrapolate.CLAMP,
+      );
     },
     onEnd: (event) => {
       const snapTo = snapPoint(x.value, event.velocityX, pSnapPoints);
-
       const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
-
-      const degrees = getDegreesForX({ x: snapTo });
-
+      const degrees = snapTo > 0 ? -180 : snapTo < 0 ? 180 : 0;
       x.value = snapTo;
 
       if (rotateYAsDeg.value === degrees) {
@@ -202,7 +184,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
         runOnJS(setIsAnimating)(true);
 
         const progress = Math.abs(rotateYAsDeg.value - degrees) / 100;
-
         const duration = diffClamp(800 * progress - Math.abs(0.1 * event.velocityX), 200, 1000);
 
         rotateYAsDeg.value = withTiming(
@@ -224,15 +205,15 @@ const BookPage2: React.FC<IBookPageProps> = ({
 
   const getBookImageStyle = (right: boolean, front: boolean) => {
     const imageStyle: any = {
-      height: Math.round(containerSize.height),
-      width: Math.round(containerSize.width),
+      height: containerHeight,
+      width: containerWidth,
       position: 'absolute',
     };
 
     if (right && front) {
-      imageStyle['left'] = Math.round(-containerSize.width / 2);
+      imageStyle['left'] = -containerWidth / 2;
     } else if (!right && !front) {
-      imageStyle['left'] = Math.round(-containerSize.width / 2);
+      imageStyle['left'] = -containerWidth / 2;
     } else {
       imageStyle['left'] = 0;
     }
@@ -242,19 +223,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
 
   const frontImageStyle = getBookImageStyle(right, true);
   const backImageStyle = getBookImageStyle(right, false);
-
-  const animatedBackImageStyle = useAnimatedStyle(() => {
-    const l = right
-      ? 0
-      : interpolate(rotateYAsDeg.value, [-180, 0], [-containerWidth / 2, -containerWidth]);
-
-    return {
-      left: l,
-    };
-  });
-
-  const gesturesEnabled = enabled && !isAnimating;
-  const showSpine = true;
 
   if (!front || !back) {
     return null;
@@ -274,7 +242,7 @@ const BookPage2: React.FC<IBookPageProps> = ({
                 height: '100%',
                 width: '50%',
                 // backgroundColor: 'red',
-                // opacity: 0,
+                // opacity: 0.5,
                 zIndex: 10000,
               },
               right ? { right: 0 } : { left: 0 },
@@ -301,8 +269,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
               {...{
                 right,
                 degrees: rotateYAsDeg,
-                width: containerSize.width,
-                viewHeight: containerSize.height,
+                width: containerWidth,
+                viewHeight: containerHeight,
               }}
             />
 
@@ -310,8 +278,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
               {...{
                 right,
                 degrees: rotateYAsDeg,
-                width: containerSize.width,
-                viewHeight: containerSize.height,
+                width: containerWidth,
+                viewHeight: containerHeight,
               }}
             />
 
@@ -331,8 +299,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
                 style={[
                   frontImageStyle,
                   right
-                    ? { left: -containerSize.width / 2 }
-                    : { right: -containerSize.width / 2, left: undefined },
+                    ? { left: -containerWidth / 2 }
+                    : { right: -containerWidth / 2, left: undefined },
                 ]}
               />
             ) : (

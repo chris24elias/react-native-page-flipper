@@ -32,15 +32,16 @@ const PAGES = [
 const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   return (
     <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'row' }}>
+      <PageFlipper data={PAGES} enabled={true} single={true} />
       {/* <ZoomView> */}
-      <Box flex={1}>
+      {/* <Box flex={1}>
         <Text>SINGLE</Text>
         <PageFlipper data={PAGES} enabled={true} single={true} />
       </Box>
       <Box flex={1}>
         <Text>NOT SINGLE</Text>
         <PageFlipper data={PAGES} enabled={true} single={false} />
-      </Box>
+      </Box> */}
       {/* </ZoomView> */}
     </Box>
   );

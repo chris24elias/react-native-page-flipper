@@ -276,6 +276,7 @@ const BookPage: React.FC<IBookPageProps> = ({
               degrees: rotateYAsDeg,
               width: containerWidth,
               viewHeight: containerHeight,
+              containerSize,
             }}
           />
 

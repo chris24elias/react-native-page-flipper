@@ -1,7 +1,6 @@
-import { IS_WEB } from '@/utils/Constants';
 import React from 'react';
 import Animated, { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
-import { AnimatedLinearGradient, Gradient } from '../Components/Gradient';
+import { Gradient } from '../Components/Gradient';
 import { transformOrigin } from '../utils/utils';
 
 type FrontShadowProps = {
@@ -51,31 +50,22 @@ const FrontShadow: React.FC<FrontShadowProps> = ({ degrees, viewHeight, right })
         animatedStyle,
       ]}
     >
-      {IS_WEB ? (
-        <Animated.View
-          style={[
-            {
-              height: viewHeight,
-              width: shadowWidth,
-            },
-            animatedStyle2,
-          ]}
-        >
-          <Gradient
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 0 }}
-            colors={colors}
-            style={[{ flex: 1 }]}
-          />
-        </Animated.View>
-      ) : (
-        <AnimatedLinearGradient
+      <Animated.View
+        style={[
+          {
+            height: viewHeight,
+            width: shadowWidth,
+          },
+          animatedStyle2,
+        ]}
+      >
+        <Gradient
           start={{ x: 1, y: 0 }}
           end={{ x: 0, y: 0 }}
           colors={colors}
-          style={[{ height: viewHeight, width: shadowWidth }, animatedStyle2]}
+          style={[{ flex: 1 }]}
         />
-      )}
+      </Animated.View>
     </Animated.View>
   );
 };

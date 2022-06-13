@@ -10,7 +10,6 @@ type IBookPageBackgroundProps = {
   isFirstPage: boolean;
   isLastPage: boolean;
   containerSize: Size;
-  pageIndex: number;
   getBookImageStyle: (right: boolean, front: boolean) => any;
 };
 

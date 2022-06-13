@@ -20,9 +20,6 @@ import PageShadow from './PageShadow';
 import { BookSpine } from './BookSpine';
 import { BookSpine2 } from './BookSpine2';
 import { snapPoint } from '../utils/utils';
-import { IS_WEB } from '@/utils/Constants';
-import { Text } from 'native-base';
-
 export type IBookPageProps = {
   right: boolean;
   front: Page;
@@ -137,10 +134,18 @@ const BookPage2: React.FC<IBookPageProps> = ({
       ? interpolate(degrees, [0, 90], [containerWidth / 2, 0], Extrapolate.CLAMP)
       : interpolate(degrees, [-90, 0], [0, containerWidth / 2], Extrapolate.CLAMP);
 
-    return {
+    const style = {
       zIndex: 1,
       width: Math.floor(w),
     };
+
+    if (right) {
+      style['left'] = 0;
+    } else {
+      style['right'] = 0;
+    }
+
+    return style;
   });
 
   const containerStyle = useAnimatedStyle(() => {
@@ -220,6 +225,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
   const frontImageStyle = getBookImageStyle(right, true);
   const backImageStyle = getBookImageStyle(right, false);
 
+  const frontUrl = right ? front.right : front.left;
+  const backUrl = right ? back.left : back.right;
   return (
     <PanGestureHandler onGestureEvent={onPanGestureHandler} enabled={gesturesEnabled}>
       <Animated.View style={containerStyle}>
@@ -232,8 +239,6 @@ const BookPage2: React.FC<IBookPageProps> = ({
               position: 'absolute',
               height: '100%',
               width: '50%',
-              // backgroundColor: 'red',
-              // opacity: 0.5,
               zIndex: 10000,
             },
             right ? { right: 0 } : { left: 0 },
@@ -243,10 +248,10 @@ const BookPage2: React.FC<IBookPageProps> = ({
         {/* BACK */}
         <Animated.View style={[styles.imageContainer, backStyle, { overflow: 'visible' }]}>
           <View style={styles.imageContainer}>
-            {back ? (
+            {backUrl ? (
               <Image
                 source={{
-                  uri: right ? back.left : back.right,
+                  uri: backUrl,
                 }}
                 style={[backImageStyle, animatedBackImageStyle]}
               />
@@ -275,22 +280,17 @@ const BookPage2: React.FC<IBookPageProps> = ({
           />
 
           {showSpine && (
-            <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
+            <BookSpine2 right={right} degrees={rotateYAsDeg} containerSize={containerSize} />
           )}
         </Animated.View>
         {/* FRONT */}
-        <Animated.View
-          style={[styles.imageContainer, frontStyle, right ? { left: 0 } : { right: 0 }]}
-        >
-          {front ? (
+        <Animated.View style={[styles.imageContainer, frontStyle]}>
+          {frontUrl ? (
             <Image
               source={{
-                uri: right ? front.right : front.left,
+                uri: frontUrl,
               }}
-              style={[
-                frontImageStyle,
-                // right ? { left: 0 } : { right: 0 },
-              ]}
+              style={[frontImageStyle]}
             />
           ) : (
             <BlankPage />
@@ -321,6 +321,6 @@ const styles = StyleSheet.create({
     // justifyContent: 'center',
     // alignItems: 'flex-end',
     // backgroundColor: 'rgba(0,0,0,0)',
-    // backgroundColor: 'white',
+    backgroundColor: 'white',
   },
 });

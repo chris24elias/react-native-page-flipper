@@ -1,6 +1,6 @@
 import { PageFlipper } from '@/PageFlipper';
 import { RootStackScreenProps } from '@/types';
-import { Box } from 'native-base';
+import { Box, Text } from 'native-base';
 import * as React from 'react';
 
 const PAGES = [
@@ -30,16 +30,16 @@ const PAGES = [
 ];
 
 const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
-  // const { t } = useTranslation();
-
   return (
-    <Box flex={1} bg="white">
+    <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'row' }}>
       {/* <ZoomView> */}
       <Box flex={1}>
-        <PageFlipper data={PAGES} landscape={true} enabled={true} single={true} />
+        <Text>SINGLE</Text>
+        <PageFlipper data={PAGES} enabled={true} single={true} />
       </Box>
       <Box flex={1}>
-        <PageFlipper data={PAGES} landscape={true} enabled={true} single={false} />
+        <Text>NOT SINGLE</Text>
+        <PageFlipper data={PAGES} enabled={true} single={false} />
       </Box>
       {/* </ZoomView> */}
     </Box>
@@ -47,26 +47,3 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
 };
 
 export { Home };
-
-//   <ScrollView>
-//     <Box mt="4" justifyContent="center" alignItems={'center'}>
-//       <PageFlipper
-//         data={PAGES}
-//         landscape={true}
-//         containerSize={{
-//           height: width / ratio,
-//           width: width,
-//         }}
-//       />
-//     </Box>
-//     <Box mt="4" justifyContent="center" alignItems={'center'}>
-//       <PageFlipper
-//         data={PAGES}
-//         landscape={false}
-//         containerSize={{
-//           height: (width / ratio) * 2,
-//           width: width,
-//         }}
-//       />
-//     </Box>
-//   </ScrollView>

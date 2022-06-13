@@ -4,27 +4,17 @@ import { Gradient } from '../Components/Gradient';
 
 type PageShadowProps = {
   degrees: Animated.SharedValue<number>;
-  width: number;
   viewHeight: number;
   right: boolean;
 };
-// const rightPosition = {
-//   start: { x: 0, y: 0 },
-//   end: { x: 1, y: 0 },
-// };
 
-// const leftPosition = {
-//   start: { x: 1, y: 0 },
-//   end: { x: 0, y: 0 },
-// };
 const PageShadow: React.FC<PageShadowProps> = ({ degrees, viewHeight, right }) => {
   const colors = right
-    ? ['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.6)']
-    : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0)'];
+    ? ['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.0)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']
+    : ['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.0)', 'rgba(0,0,0,0)'];
   const shadowWidth = 20;
-  // const position = right ? rightPosition : leftPosition;
   const animatedStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(Math.abs(degrees.value), [0, 30, 70, 180], [0, 0, 1, 0]);
+    const opacity = interpolate(Math.abs(degrees.value), [0, 30, 55, 180], [0, 0, 1, 0]);
     return {
       opacity,
     };

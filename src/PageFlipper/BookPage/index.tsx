@@ -51,7 +51,7 @@ const timingConfig: WithTimingConfig = {
   easing: Easing.inOut(Easing.cubic),
 };
 
-const BookPage2: React.FC<IBookPageProps> = ({
+const BookPage: React.FC<IBookPageProps> = ({
   right,
   front,
   back,
@@ -302,7 +302,7 @@ const BookPage2: React.FC<IBookPageProps> = ({
   );
 };
 
-export { BookPage2 };
+export { BookPage };
 
 const BlankPage = () => (
   <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: '#fff' }} />

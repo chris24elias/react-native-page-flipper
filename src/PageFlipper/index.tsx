@@ -2,7 +2,7 @@ import useSetState from '@/hooks/useSetState';
 import React, { useEffect, useState } from 'react';
 import { useRef } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
-import { BookPage2, IBookPageProps } from './BookPage2/BookPage2';
+import { BookPage, IBookPageProps } from './BookPage';
 import { BookPageBackground } from './BookPageBackground';
 import { Page, Size } from './types';
 import cacheImages from './utils/cacheImages';
@@ -210,7 +210,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({
           {!prev ? (
             <Empty />
           ) : (
-            <BookPage2
+            <BookPage
               right={false}
               front={current}
               back={prev}
@@ -225,7 +225,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({
               <Empty />
             )
           ) : (
-            <BookPage2
+            <BookPage
               right
               front={current}
               back={next}

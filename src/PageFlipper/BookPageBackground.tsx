@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { BookSpine } from './BookPage2/BookSpine';
+import { BookSpine } from './BookPage/BookSpine';
 import Image from './Components/Image';
 import { Size } from './types';
 

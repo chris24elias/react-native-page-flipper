@@ -1,12 +1,12 @@
 import useSetState from '@/hooks/useSetState';
 import React, { useEffect, useState } from 'react';
 import { useRef } from 'react';
-import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { BookPage2, IBookPageProps } from './BookPage2/BookPage2';
 import { BookPagePortrait } from './BookPage2/BookPagePortrait';
 import { BookPageBackground } from './BookPageBackground';
 import Image from './Components/Image';
-import { Size } from './types';
+import { Page, Size } from './types';
 import cacheImages from './utils/cacheImages';
 import { getImageSize } from './utils/utils';
 
@@ -15,18 +15,26 @@ export type IPageFlipperProps = {
 
   data: string[];
   enabled?: boolean;
+  single: boolean;
 };
 
-const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = true }) => {
+type State = {
+  pageIndex: number;
+  pages: Page[];
+  isAnimating: boolean;
+  initialized: boolean;
+  realImageSize: Size;
+};
+
+const PageFlipper: React.FC<IPageFlipperProps> = ({
+  landscape,
+  data,
+  enabled = true,
+  single = false,
+}) => {
   const [layout, setLayout] = useState({ height: 0, width: 0 });
   const { width, height } = layout;
-  const [state, setState] = useSetState<{
-    pageIndex: number;
-    pages: string[];
-    isAnimating: boolean;
-    initialized: boolean;
-    realImageSize: Size;
-  }>({
+  const [state, setState] = useSetState<State>({
     pageIndex: 0,
     pages: [],
     isAnimating: false,
@@ -41,26 +49,51 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
 
   const initialize = async () => {
     try {
-      let allPages: string[] = [];
+      const allPages: Page[] = [];
 
-      if (!landscape) {
-        for (let i = 0; i < data.length * 2; i += 2) {
-          allPages[i] = data[i];
-          allPages[i + 1] = data[i];
+      if (!single) {
+        // if (!landscape) {
+        //   for (let i = 0; i < data.length * 2; i += 2) {
+        //     allPages[i] = data[i];
+        //     allPages[i + 1] = data[i];
+        //   }
+        // } else {
+        // allPages = data;
+
+        for (let i = 0; i < data.length; i++) {
+          allPages.push({
+            left: data[i],
+            right: data[i],
+          });
         }
+        // }
+        cacheImages(data.map((uri) => ({ uri })));
+
+        const realImageSize = await getImageSize(data[0]);
+
+        setState({
+          initialized: true,
+          pages: allPages,
+          realImageSize,
+        });
       } else {
-        allPages = data;
+        for (let i = 0; i < data.length; i += 2) {
+          allPages.push({
+            left: data[i],
+            right: data[i + 1],
+          });
+        }
+
+        cacheImages(data.map((uri) => ({ uri })));
+
+        const realImageSize = await getImageSize(data[0]);
+
+        setState({
+          initialized: true,
+          pages: allPages,
+          realImageSize,
+        });
       }
-
-      cacheImages(data.map((uri) => ({ uri })));
-
-      const realImageSize = await getImageSize(allPages[0]);
-
-      setState({
-        initialized: true,
-        pages: allPages,
-        realImageSize,
-      });
     } catch (error) {
       console.log('error', error);
     }
@@ -72,16 +105,15 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
   };
 
   const getContainerSize = () => {
-    const size = { ...state.realImageSize };
-
-    if (!landscape) {
-      size.width = size.width / 2;
-    }
+    const size = {
+      height: state.realImageSize.height,
+      width: single ? state.realImageSize.width * 2 : state.realImageSize.width,
+    };
 
     let containerSize: Size;
-    const ratio = size.height / size.width;
 
     if (size.height > size.width) {
+      const ratio = size.height / size.width;
       containerSize = {
         height: width * ratio,
         width,
@@ -93,6 +125,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
         containerSize.width = containerSize.width / diff;
       }
     } else {
+      const ratio = size.width / size.height;
       containerSize = {
         height,
         width: height * ratio,
@@ -131,6 +164,36 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
 
   const containerSize = getContainerSize();
 
+  const getBookImageStyle = (right: boolean, front: boolean) => {
+    const imageStyle: any = {
+      height: containerSize.height,
+      width: single ? containerSize.width / 2 : containerSize.width,
+      position: 'absolute',
+    };
+
+    if (!single) {
+      if ((front && right) || (!front && right)) {
+        // front right or back right
+        imageStyle['left'] = -containerSize.width / 2;
+      } else if (front && !right) {
+        // front left
+        imageStyle['right'] = -containerSize.width / 2;
+      }
+    } else {
+      //
+
+      if ((front && right) || (!front && right)) {
+        // front right or back right
+        imageStyle['left'] = 0;
+      } else if (front && !right) {
+        // front left
+        imageStyle['right'] = 0;
+      }
+    }
+
+    return imageStyle;
+  };
+
   const { pageIndex, pages } = state;
   const prev = pages[pageIndex - 1];
   const current = pages[pageIndex];
@@ -139,7 +202,7 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
   const isFirstPage = pageIndex === 0;
   const isLastPage = pageIndex === pages.length - 1;
 
-  const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> = {
+  const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> & { pageIndex: number } = {
     containerSize: containerSize,
     isAnimating: state.isAnimating,
     enabled,
@@ -147,10 +210,12 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
     isAnimatingRef: isAnimatingRef,
     onPageFlip: onPageFlipped,
     pageIndex,
+    getBookImageStyle,
+    single,
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} onLayout={onLayout}>
+    <View style={styles.container} onLayout={onLayout}>
       <View
         style={[
           styles.contentContainer,
@@ -165,85 +230,49 @@ const PageFlipper: React.FC<IPageFlipperProps> = ({ landscape, data, enabled = t
             shadowOpacity: 0.25,
             shadowRadius: 3.84,
             elevation: 5,
-            backgroundColor: 'grey',
+            backgroundColor: 'white',
           },
         ]}
       >
-        {landscape ? (
-          <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
-            {!prev ? (
-              <Empty />
-            ) : (
-              <BookPage2
-                right={false}
-                front={current}
-                back={prev}
-                key={`left${pageIndex}`}
-                {...bookPageProps}
-              />
-            )}
-            {!next ? (
-              <Empty />
-            ) : (
-              <BookPage2
-                right
-                front={current}
-                back={next}
-                key={`right${pageIndex}`}
-                {...bookPageProps}
-              />
-            )}
-            <BookPageBackground
-              left={!prev ? current : prev}
-              right={!next ? current : next}
-              containerSize={containerSize}
-              isFirstPage={isFirstPage}
-              isLastPage={isLastPage}
-              pageIndex={state.pageIndex}
+        <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
+          {!prev ? (
+            <Empty />
+          ) : (
+            <BookPage2
+              right={false}
+              front={current}
+              back={prev}
+              key={`left${pageIndex}`}
+              {...bookPageProps}
             />
-          </View>
-        ) : (
-          <View style={{ flex: 1, overflow: 'hidden' }}>
-            <View style={{ ...StyleSheet.absoluteFillObject }}>
-              <BookPagePortrait
-                current={current}
-                prev={prev}
-                key={`right${pageIndex}`}
-                {...bookPageProps}
-              />
-            </View>
-            {next ? (
-              <View
-                style={{
-                  ...StyleSheet.absoluteFillObject,
-                  zIndex: -5,
-                  overflow: 'hidden',
-                }}
-              >
-                <Image
-                  source={{ uri: next }}
-                  style={{
-                    height: containerSize.height,
-                    width: containerSize.width * 2,
-                    right: pageIndex % 2 === 0 ? containerSize.width : 0,
-                    backgroundColor: 'white',
-                  }}
-                />
+          )}
+          {!next ? (
+            isLastPage ? (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>last page</Text>
               </View>
             ) : (
-              <View
-                style={{
-                  ...StyleSheet.absoluteFillObject,
-                  zIndex: -5,
-                  overflow: 'hidden',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#FFF',
-                }}
-              />
-            )}
-          </View>
-        )}
+              <Empty />
+            )
+          ) : (
+            <BookPage2
+              right
+              front={current}
+              back={next}
+              key={`right${pageIndex}`}
+              {...bookPageProps}
+            />
+          )}
+          <BookPageBackground
+            left={!prev ? current.left : prev.left}
+            right={!next ? current.right : next.right}
+            containerSize={containerSize}
+            isFirstPage={isFirstPage}
+            isLastPage={isLastPage}
+            pageIndex={state.pageIndex}
+            getBookImageStyle={getBookImageStyle}
+          />
+        </View>
       </View>
     </View>
   );

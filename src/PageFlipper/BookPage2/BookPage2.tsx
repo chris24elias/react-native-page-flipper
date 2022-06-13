@@ -13,7 +13,7 @@ import Animated, {
   WithTimingConfig,
 } from 'react-native-reanimated';
 import Image from '../Components/Image';
-import { Size } from '../types';
+import { Page, Size } from '../types';
 import BackShadow from './BackShadow';
 import FrontShadow from './FrontShadow';
 import PageShadow from './PageShadow';
@@ -21,17 +21,20 @@ import { BookSpine } from './BookSpine';
 import { BookSpine2 } from './BookSpine2';
 import { snapPoint } from '../utils/utils';
 import { IS_WEB } from '@/utils/Constants';
+import { Text } from 'native-base';
 
 export type IBookPageProps = {
   right: boolean;
-  front: string;
-  back: string;
+  front: Page;
+  back: Page;
   onPageFlip: any;
   containerSize: Size;
   isAnimatingRef: React.MutableRefObject<boolean>;
   setIsAnimating: (val: boolean) => void;
   isAnimating: boolean;
   enabled: boolean;
+  getBookImageStyle: (right: boolean, front: boolean) => any;
+  single: boolean;
 };
 
 export const diffClamp = (val: number, min: number, max: number) => {
@@ -61,6 +64,8 @@ const BookPage2: React.FC<IBookPageProps> = ({
   setIsAnimating,
   isAnimating,
   enabled,
+  getBookImageStyle,
+  single,
 }) => {
   const x = useSharedValue(0);
   const isMounted = useRef(false);
@@ -141,6 +146,7 @@ const BookPage2: React.FC<IBookPageProps> = ({
   const containerStyle = useAnimatedStyle(() => {
     return {
       flex: 1,
+      // backgroundColor: 'white',
       zIndex: isDragging ? 100 : 0,
     };
   });
@@ -148,7 +154,11 @@ const BookPage2: React.FC<IBookPageProps> = ({
   const animatedBackImageStyle = useAnimatedStyle(() => {
     const l = right
       ? 0
-      : interpolate(rotateYAsDeg.value, [-180, 0], [-containerWidth / 2, -containerWidth]);
+      : interpolate(
+          rotateYAsDeg.value,
+          [-180, 0],
+          single ? [0, -containerWidth / 2] : [-containerWidth / 2, -containerWidth],
+        );
 
     return {
       left: l,
@@ -203,114 +213,92 @@ const BookPage2: React.FC<IBookPageProps> = ({
     },
   });
 
-  const getBookImageStyle = (right: boolean, front: boolean) => {
-    const imageStyle: any = {
-      height: containerHeight,
-      width: containerWidth,
-      position: 'absolute',
-    };
-
-    if (right && front) {
-      imageStyle['left'] = -containerWidth / 2;
-    } else if (!right && !front) {
-      imageStyle['left'] = -containerWidth / 2;
-    } else {
-      imageStyle['left'] = 0;
-    }
-
-    return imageStyle;
-  };
-
-  const frontImageStyle = getBookImageStyle(right, true);
-  const backImageStyle = getBookImageStyle(right, false);
-
   if (!front || !back) {
     return null;
   }
 
+  const frontImageStyle = getBookImageStyle(right, true);
+  const backImageStyle = getBookImageStyle(right, false);
+
   return (
-    <Animated.View style={containerStyle}>
-      <PanGestureHandler onGestureEvent={onPanGestureHandler} enabled={gesturesEnabled}>
-        <Animated.View style={containerStyle}>
-          <Pressable
-            onPress={() => {
-              if (!isAnimatingRef.current) turnPage();
-            }}
-            style={[
-              {
-                position: 'absolute',
-                height: '100%',
-                width: '50%',
-                // backgroundColor: 'red',
-                // opacity: 0.5,
-                zIndex: 10000,
-              },
-              right ? { right: 0 } : { left: 0 },
-            ]}
-          />
+    <PanGestureHandler onGestureEvent={onPanGestureHandler} enabled={gesturesEnabled}>
+      <Animated.View style={containerStyle}>
+        <Pressable
+          onPress={() => {
+            if (!isAnimatingRef.current) turnPage();
+          }}
+          style={[
+            {
+              position: 'absolute',
+              height: '100%',
+              width: '50%',
+              // backgroundColor: 'red',
+              // opacity: 0.5,
+              zIndex: 10000,
+            },
+            right ? { right: 0 } : { left: 0 },
+          ]}
+        />
 
-          {/* BACK */}
-          <Animated.View style={[styles.imageContainer, backStyle, { overflow: 'visible' }]}>
-            <View style={styles.imageContainer}>
-              {back ? (
-                <Image
-                  source={{
-                    uri: back,
-                  }}
-                  style={[backImageStyle, animatedBackImageStyle]}
-                />
-              ) : (
-                <BlankPage />
-              )}
-            </View>
-
-            <BackShadow {...{ degrees: rotateYAsDeg, right }} />
-            <FrontShadow
-              {...{
-                right,
-                degrees: rotateYAsDeg,
-                width: containerWidth,
-                viewHeight: containerHeight,
-              }}
-            />
-
-            <PageShadow
-              {...{
-                right,
-                degrees: rotateYAsDeg,
-                width: containerWidth,
-                viewHeight: containerHeight,
-              }}
-            />
-
-            {showSpine && (
-              <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
-            )}
-          </Animated.View>
-          {/* FRONT */}
-          <Animated.View
-            style={[styles.imageContainer, frontStyle, right ? { left: 0 } : { right: 0 }]}
-          >
-            {front ? (
+        {/* BACK */}
+        <Animated.View style={[styles.imageContainer, backStyle, { overflow: 'visible' }]}>
+          <View style={styles.imageContainer}>
+            {back ? (
               <Image
                 source={{
-                  uri: front,
+                  uri: right ? back.left : back.right,
                 }}
-                style={[
-                  frontImageStyle,
-                  right
-                    ? { left: -containerWidth / 2 }
-                    : { right: -containerWidth / 2, left: undefined },
-                ]}
+                style={[backImageStyle, animatedBackImageStyle]}
               />
             ) : (
               <BlankPage />
             )}
-            {showSpine && <BookSpine right={right} containerSize={containerSize} />}
-          </Animated.View>
+          </View>
+
+          <BackShadow {...{ degrees: rotateYAsDeg, right }} />
+          <FrontShadow
+            {...{
+              right,
+              degrees: rotateYAsDeg,
+              width: containerWidth,
+              viewHeight: containerHeight,
+            }}
+          />
+
+          <PageShadow
+            {...{
+              right,
+              degrees: rotateYAsDeg,
+              width: containerWidth,
+              viewHeight: containerHeight,
+            }}
+          />
+
+          {showSpine && (
+            <BookSpine2 right={right} containerSize={containerSize} degrees={rotateYAsDeg} />
+          )}
         </Animated.View>
-      </PanGestureHandler>
-    </Animated.View>
+        {/* FRONT */}
+        <Animated.View
+          style={[styles.imageContainer, frontStyle, right ? { left: 0 } : { right: 0 }]}
+        >
+          {front ? (
+            <Image
+              source={{
+                uri: right ? front.right : front.left,
+              }}
+              style={[
+                frontImageStyle,
+                // right ? { left: 0 } : { right: 0 },
+              ]}
+            />
+          ) : (
+            <BlankPage />
+          )}
+          {showSpine && <BookSpine right={right} containerSize={containerSize} />}
+        </Animated.View>
+      </Animated.View>
+    </PanGestureHandler>
   );
 };
 
@@ -330,8 +318,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backfaceVisibility: 'hidden',
     overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    // justifyContent: 'center',
+    // alignItems: 'flex-end',
     // backgroundColor: 'rgba(0,0,0,0)',
     // backgroundColor: 'white',
   },

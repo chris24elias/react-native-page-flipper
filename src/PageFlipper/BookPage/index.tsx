@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -150,7 +150,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
         ? interpolate(degrees, [0, 90], [containerWidth / 2, 0], Extrapolate.CLAMP)
         : interpolate(degrees, [-90, 0], [0, containerWidth / 2], Extrapolate.CLAMP);
 
-      const style = {
+      const style: ViewStyle = {
         zIndex: 1,
         width: Math.floor(w),
       };

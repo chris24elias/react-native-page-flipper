@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { BookSpine } from './BookPage2/BookSpine';
+import { BookSpine } from './BookPage/BookSpine';
 import Image from './Components/Image';
 import { Size } from './types';
 
@@ -10,7 +10,7 @@ type IBookPageBackgroundProps = {
   isFirstPage: boolean;
   isLastPage: boolean;
   containerSize: Size;
-  pageIndex: number;
+  getBookImageStyle: (right: boolean, front: boolean) => any;
 };
 
 const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
@@ -19,40 +19,19 @@ const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
   isFirstPage,
   isLastPage,
   containerSize,
+  getBookImageStyle,
 }) => {
-  const size = {
-    height: containerSize.height,
-    width: containerSize.width,
-  };
-
-  if (!left || !right) {
-    return null;
-  }
+  const leftImageStyle = getBookImageStyle(false, true);
+  const rightImageStyle = getBookImageStyle(true, true);
 
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: left }}
-          style={[
-            size,
-            {
-              left: 0,
-            },
-          ]}
-        />
+        {left && <Image source={{ uri: left }} style={[leftImageStyle]} />}
         {isFirstPage && <BookSpine right={false} containerSize={containerSize} />}
       </View>
       <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: right }}
-          style={[
-            size,
-            {
-              left: -containerSize.width / 2,
-            },
-          ]}
-        />
+        {right && <Image source={{ uri: right }} style={[rightImageStyle]} />}
         {isLastPage && <BookSpine right={true} containerSize={containerSize} />}
       </View>
     </View>

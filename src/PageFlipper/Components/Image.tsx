@@ -15,6 +15,7 @@ const Image: React.FC<FastImageProps> = ({ source, ...props }) => {
         // cache: 'cacheOnly',
       }}
       resizeMode="contain"
+      // resizeMode="cover"
     />
   );
 };

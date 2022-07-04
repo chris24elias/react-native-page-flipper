@@ -22,9 +22,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import Image from '../Components/Image';
 import { Size } from '../types';
-import BackShadow from './BackShadow';
-import FrontShadow from './FrontShadow';
-import PageShadow from './PageShadow';
+import BackShadow from '../BookPage/BackShadow';
+import FrontShadow from '../BookPage/FrontShadow';
+import PageShadow from '../BookPage/PageShadow';
 import { snapPoint } from '../utils/utils';
 
 export type IBookPageProps = {

@@ -1,8 +1,7 @@
 import { PageFlipper } from '@/PageFlipper';
 import { RootStackScreenProps } from '@/types';
-import { Box } from 'native-base';
+import { Box, Text } from 'native-base';
 import * as React from 'react';
-import { useWindowDimensions } from 'react-native';
 
 const PAGES = [
   // 'https://i.picsum.photos/id/960/780/844.jpg?hmac=yi46RPSHaJh3LsOi_4noHPFpgB2pdTiFkfLg0YWANC8',
@@ -15,7 +14,6 @@ const PAGES = [
   // 'https://i.picsum.photos/id/183/780/844.jpg?hmac=ZKyE-nRYJ4f8UvpjLhWzhNOOpIpqjU0Ve1eNoPpYF-A',
 
   'https://up.mangadudes.com/bleach/18/bleach-9337-e60a76a126bc6ecd3211aeaad51a7dba.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9338-89fcdb98b22c94781ba2846ea2e562c3.jpg',
   'https://up.mangadudes.com/bleach/18/bleach-9338-89fcdb98b22c94781ba2846ea2e562c3.jpg',
   'https://up.mangadudes.com/bleach/18/bleach-9339-5d0e73373eb814d65b18bfa4ca533be8.jpg',
   'https://up.mangadudes.com/bleach/18/bleach-9340-c1220292956ae4cc1df0676e2d01c2e1.jpg',
@@ -32,36 +30,21 @@ const PAGES = [
 ];
 
 const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
-  // const { t } = useTranslation();
-
   return (
-    <Box flex={1} bg="white">
-      <PageFlipper data={PAGES} landscape={false} />
+    <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'row' }}>
+      <PageFlipper data={PAGES} enabled={true} single={true} />
+      {/* <ZoomView> */}
+      {/* <Box flex={1}>
+        <Text>SINGLE</Text>
+        <PageFlipper data={PAGES} enabled={true} single={true} />
+      </Box>
+      <Box flex={1}>
+        <Text>NOT SINGLE</Text>
+        <PageFlipper data={PAGES} enabled={true} single={false} />
+      </Box> */}
+      {/* </ZoomView> */}
     </Box>
   );
 };
 
 export { Home };
-
-//   <ScrollView>
-//     <Box mt="4" justifyContent="center" alignItems={'center'}>
-//       <PageFlipper
-//         data={PAGES}
-//         landscape={true}
-//         containerSize={{
-//           height: width / ratio,
-//           width: width,
-//         }}
-//       />
-//     </Box>
-//     <Box mt="4" justifyContent="center" alignItems={'center'}>
-//       <PageFlipper
-//         data={PAGES}
-//         landscape={false}
-//         containerSize={{
-//           height: (width / ratio) * 2,
-//           width: width,
-//         }}
-//       />
-//     </Box>
-//   </ScrollView>

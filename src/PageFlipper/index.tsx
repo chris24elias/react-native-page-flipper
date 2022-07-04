@@ -2,7 +2,7 @@ import useSetState from '@/hooks/useSetState';
 import React, { useEffect, useState } from 'react';
 import { useRef } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
-import { BookPage, IBookPageProps } from './BookPage';
+import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
 import { BookPageBackground } from './BookPageBackground';
 import { Page, Size } from './types';
 import cacheImages from './utils/cacheImages';
@@ -15,237 +15,349 @@ export type IPageFlipperProps = {
   renderLastPage?: () => JSX.Element;
 };
 
+export type PageFlipperInstance = {
+  goToPage: (index: number) => void;
+  previousPage: () => void;
+  nextPage: () => void;
+};
+
 type State = {
   pageIndex: number;
   pages: Page[];
   isAnimating: boolean;
   initialized: boolean;
   realImageSize: Size;
+  prev: Page;
+  current: Page;
+  next: Page;
+  nextPageIndex?: number;
 };
 
-const PageFlipper: React.FC<IPageFlipperProps> = ({
-  data,
-  enabled = true,
-  single = false,
-  renderLastPage,
-}) => {
-  const [layout, setLayout] = useState({ height: 0, width: 0 });
-  const { width, height } = layout;
-  const [state, setState] = useSetState<State>({
-    pageIndex: 0,
-    pages: [],
-    isAnimating: false,
-    initialized: false,
-    realImageSize: { width: 0, height: 0 },
-  });
-  const isAnimatingRef = useRef(false);
+const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
+  ({ data, enabled = true, single = false, renderLastPage }, ref) => {
+    const [layout, setLayout] = useState({ height: 0, width: 0 });
+    const { width, height } = layout;
+    const [state, setState] = useSetState<State>({
+      pageIndex: 0,
+      pages: [],
+      isAnimating: false,
+      initialized: false,
+      realImageSize: { width: 0, height: 0 },
+      prev: { left: '', right: '' },
+      current: { left: '', right: '' },
+      next: { left: '', right: '' },
+      nextPageIndex: undefined,
+    });
+    const isAnimatingRef = useRef(false);
+    const prevBookPage = useRef<BookPageInstance>(null);
+    const nextBookPage = useRef<BookPageInstance>(null);
 
-  useEffect(() => {
-    initialize();
-  }, [data]);
+    useEffect(() => {
+      initialize();
+    }, [data]);
 
-  const initialize = async () => {
-    try {
-      const allPages: Page[] = [];
+    const previousPage = () => {
+      const newIndex = state.pageIndex - 1;
+      if (newIndex < 0) {
+        console.log('no previous page');
+        return;
+      }
 
-      for (let i = 0; i < data.length; i++) {
-        if (single) {
-          allPages.push({
-            left: data[i],
-            right: data[i + 1],
-          });
-          i++;
-        } else {
-          allPages.push({
-            left: data[i],
-            right: data[i],
-          });
+      goToPage(newIndex);
+    };
+
+    const nextPage = () => {
+      const newIndex = state.pageIndex + 1;
+      if (newIndex > state.pages.length - 1) {
+        console.log('no next page');
+        return;
+      }
+
+      goToPage(newIndex);
+    };
+
+    const goToPage = (index: number) => {
+      if (index === undefined || index === null) {
+        return;
+      }
+
+      if (typeof index !== 'number' || isNaN(index)) {
+        console.log('index must be a number');
+        return;
+      }
+
+      if (index < 0 || index > state.pages.length - 1) {
+        console.log('invalid page');
+        return;
+      }
+
+      if (index === state.pageIndex) {
+        console.log('same page');
+        return;
+      }
+
+      if (isAnimatingRef.current) {
+        console.log('is already animating');
+        return;
+      }
+
+      if (index > state.pageIndex) {
+        setState({
+          // pageIndex: index,
+          next: state.pages[index],
+          nextPageIndex: index,
+        });
+        setTimeout(() => {
+          nextBookPage.current?.turnPage();
+        }, 50);
+      } else {
+        setState({
+          // pageIndex: index,
+          prev: state.pages[index],
+          nextPageIndex: index,
+        });
+        setTimeout(() => {
+          prevBookPage.current?.turnPage();
+        }, 50);
+      }
+
+      // const prev = state.pages[index - 1];
+      // const current = state.pages[index];
+      // const next = state.pages[index + 1];
+      // setState({
+      //   pageIndex: index,
+      //   prev,
+      //   current,
+      //   next,
+      // });
+    };
+    console.log('STATE', state.nextPageIndex);
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        goToPage,
+        nextPage,
+        previousPage,
+      }),
+      [goToPage, nextPage, previousPage],
+    );
+
+    const initialize = async () => {
+      try {
+        const allPages: Page[] = [];
+
+        for (let i = 0; i < data.length; i++) {
+          if (single) {
+            allPages.push({
+              left: data[i],
+              right: data[i + 1],
+            });
+            i++;
+          } else {
+            allPages.push({
+              left: data[i],
+              right: data[i],
+            });
+          }
+        }
+
+        cacheImages(data.map((uri) => ({ uri })));
+
+        const realImageSize = await getImageSize(data[0]);
+        const prev = allPages[pageIndex - 1];
+        const current = allPages[pageIndex];
+        const next = allPages[pageIndex + 1];
+        setState({
+          initialized: true,
+          pages: allPages,
+          realImageSize,
+          prev,
+          current,
+          next,
+        });
+      } catch (error) {
+        console.log('error', error);
+      }
+    };
+
+    const onLayout = (e: LayoutChangeEvent) => {
+      const { height, width } = e.nativeEvent.layout;
+      setLayout({ height, width });
+    };
+
+    const getContainerSize = () => {
+      const size = {
+        height: state.realImageSize.height,
+        width: single ? state.realImageSize.width * 2 : state.realImageSize.width,
+      };
+
+      let containerSize: Size;
+
+      if (size.height > size.width) {
+        const ratio = size.height / size.width;
+        containerSize = {
+          height: width * ratio,
+          width,
+        };
+
+        if (containerSize.height > height) {
+          const diff = containerSize.height / height;
+          containerSize.height = height;
+          containerSize.width = containerSize.width / diff;
+        }
+      } else {
+        const ratio = size.width / size.height;
+        containerSize = {
+          height,
+          width: height * ratio,
+        };
+        if (containerSize.width > width) {
+          const diff = containerSize.width / width;
+          containerSize.width = width;
+          containerSize.height = containerSize.height / diff;
         }
       }
 
-      cacheImages(data.map((uri) => ({ uri })));
-
-      const realImageSize = await getImageSize(data[0]);
-
-      setState({
-        initialized: true,
-        pages: allPages,
-        realImageSize,
-      });
-    } catch (error) {
-      console.log('error', error);
-    }
-  };
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { height, width } = e.nativeEvent.layout;
-    setLayout({ height, width });
-  };
-
-  const getContainerSize = () => {
-    const size = {
-      height: state.realImageSize.height,
-      width: single ? state.realImageSize.width * 2 : state.realImageSize.width,
+      return containerSize;
     };
 
-    let containerSize: Size;
+    const onPageFlipped = (index: number) => {
+      console.log('on page flipped', state.nextPageIndex);
+      const newIndex = state.nextPageIndex !== undefined ? state.nextPageIndex : pageIndex + index;
+      const prev = state.pages[newIndex - 1];
+      const current = state.pages[newIndex];
+      const next = state.pages[newIndex + 1];
+      setState({
+        pageIndex: newIndex,
+        isAnimating: false,
+        prev,
+        current,
+        next,
+        nextPageIndex: undefined,
+      });
+      isAnimatingRef.current = false;
+    };
 
-    if (size.height > size.width) {
-      const ratio = size.height / size.width;
-      containerSize = {
-        height: width * ratio,
-        width,
+    const setIsAnimating = (val: boolean) => {
+      console.log('setting is animating', val);
+      setState({
+        isAnimating: val,
+      });
+      isAnimatingRef.current = val;
+    };
+
+    const getLastPage = () => {
+      if (renderLastPage) {
+        return renderLastPage();
+      }
+
+      return (
+        <View style={styles.container}>
+          <Text>last page</Text>
+        </View>
+      );
+    };
+
+    const containerSize = getContainerSize();
+
+    const getBookImageStyle = (right: boolean, front: boolean) => {
+      const imageStyle: any = {
+        height: containerSize.height,
+        width: single ? containerSize.width / 2 : containerSize.width,
+        position: 'absolute',
       };
 
-      if (containerSize.height > height) {
-        const diff = containerSize.height / height;
-        containerSize.height = height;
-        containerSize.width = containerSize.width / diff;
+      const offset = single ? 0 : -containerSize.width / 2;
+
+      if ((front && right) || (!front && right)) {
+        // front right or back right
+        imageStyle['left'] = offset;
+      } else if (front && !right) {
+        // front left
+        imageStyle['right'] = offset;
       }
-    } else {
-      const ratio = size.width / size.height;
-      containerSize = {
-        height,
-        width: height * ratio,
-      };
-      if (containerSize.width > width) {
-        const diff = containerSize.width / width;
-        containerSize.width = width;
-        containerSize.height = containerSize.height / diff;
-      }
-    }
 
-    return containerSize;
-  };
+      return imageStyle;
+    };
 
-  const onPageFlipped = (index: number) => {
-    console.log('on page flipped');
-    const newIndex = pageIndex + index;
-    setState({
-      pageIndex: newIndex,
-      isAnimating: false,
-    });
-    isAnimatingRef.current = false;
-  };
+    const { pageIndex, pages, prev, current, next } = state;
+    // const prev = pages[pageIndex - 1];
+    // const current = pages[pageIndex];
+    // const next = pages[pageIndex + 1];
 
-  const setIsAnimating = (val: boolean) => {
-    console.log('setting is animating', val);
-    setState({
-      isAnimating: val,
-    });
-    isAnimatingRef.current = val;
-  };
+    const isFirstPage = pageIndex === 0;
+    const isLastPage = pageIndex === pages.length - 1;
+    const shouldRenderLastPage = isLastPage && single && data.length % 2 !== 0;
 
-  const getLastPage = () => {
-    if (renderLastPage) {
-      return renderLastPage();
+    const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> = {
+      containerSize: containerSize,
+      isAnimating: state.isAnimating,
+      enabled,
+      setIsAnimating: setIsAnimating,
+      isAnimatingRef: isAnimatingRef,
+      onPageFlip: onPageFlipped,
+      getBookImageStyle,
+      single,
+    };
+
+    if (!state.initialized) {
+      return null;
     }
 
     return (
-      <View style={styles.container}>
-        <Text>last page</Text>
-      </View>
-    );
-  };
-
-  const containerSize = getContainerSize();
-
-  const getBookImageStyle = (right: boolean, front: boolean) => {
-    const imageStyle: any = {
-      height: containerSize.height,
-      width: single ? containerSize.width / 2 : containerSize.width,
-      position: 'absolute',
-    };
-
-    const offset = single ? 0 : -containerSize.width / 2;
-
-    if ((front && right) || (!front && right)) {
-      // front right or back right
-      imageStyle['left'] = offset;
-    } else if (front && !right) {
-      // front left
-      imageStyle['right'] = offset;
-    }
-
-    return imageStyle;
-  };
-
-  const { pageIndex, pages } = state;
-  const prev = pages[pageIndex - 1];
-  const current = pages[pageIndex];
-  const next = pages[pageIndex + 1];
-
-  const isFirstPage = pageIndex === 0;
-  const isLastPage = pageIndex === pages.length - 1;
-
-  const shouldRenderLastPage = isLastPage && single && data.length % 2 !== 0;
-
-  const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> = {
-    containerSize: containerSize,
-    isAnimating: state.isAnimating,
-    enabled,
-    setIsAnimating: setIsAnimating,
-    isAnimatingRef: isAnimatingRef,
-    onPageFlip: onPageFlipped,
-    getBookImageStyle,
-    single,
-  };
-
-  if (!state.initialized) {
-    return null;
-  }
-
-  return (
-    <View style={styles.container} onLayout={onLayout}>
-      <View
-        style={[
-          styles.contentContainer,
-          {
-            height: containerSize.height,
-            width: containerSize.width,
-          },
-        ]}
-      >
-        <View style={styles.content}>
-          {!prev ? (
-            <Empty />
-          ) : (
-            <BookPage
-              right={false}
-              front={current}
-              back={prev}
-              key={`left${pageIndex}`}
-              {...bookPageProps}
-            />
-          )}
-          {!next ? (
-            shouldRenderLastPage ? (
-              getLastPage()
-            ) : (
+      <View style={styles.container} onLayout={onLayout}>
+        <View
+          style={[
+            styles.contentContainer,
+            {
+              height: containerSize.height,
+              width: containerSize.width,
+            },
+          ]}
+        >
+          <View style={styles.content}>
+            {!prev ? (
               <Empty />
-            )
-          ) : (
-            <BookPage
-              right
-              front={current}
-              back={next}
-              key={`right${pageIndex}`}
-              {...bookPageProps}
+            ) : (
+              <BookPage
+                ref={prevBookPage}
+                right={false}
+                front={current}
+                back={prev}
+                key={`left${pageIndex}`}
+                {...bookPageProps}
+              />
+            )}
+            {!next ? (
+              shouldRenderLastPage ? (
+                getLastPage()
+              ) : (
+                <Empty />
+              )
+            ) : (
+              <BookPage
+                ref={nextBookPage}
+                right
+                front={current}
+                back={next}
+                key={`right${pageIndex}`}
+                {...bookPageProps}
+              />
+            )}
+            <BookPageBackground
+              left={!prev ? current.left : prev.left}
+              right={!next ? current.right : next.right}
+              isFirstPage={isFirstPage}
+              isLastPage={isLastPage}
+              getBookImageStyle={getBookImageStyle}
+              containerSize={containerSize}
             />
-          )}
-          <BookPageBackground
-            left={!prev ? current.left : prev.left}
-            right={!next ? current.right : next.right}
-            isFirstPage={isFirstPage}
-            isLastPage={isLastPage}
-            getBookImageStyle={getBookImageStyle}
-            containerSize={containerSize}
-          />
+          </View>
         </View>
       </View>
-    </View>
-  );
-};
+    );
+  },
+);
 
 export { PageFlipper };
 

@@ -1,6 +1,6 @@
-import { PageFlipper } from '@/PageFlipper';
+import { PageFlipper, PageFlipperInstance } from '@/PageFlipper';
 import { RootStackScreenProps } from '@/types';
-import { Box, Text } from 'native-base';
+import { Box, Button, Input } from 'native-base';
 import * as React from 'react';
 
 const PAGES = [
@@ -30,9 +30,35 @@ const PAGES = [
 ];
 
 const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
+  const pageFlipperRef = React.useRef<PageFlipperInstance>(null);
+  const [text, setText] = React.useState('');
+  React.useEffect(() => {
+    // setTimeout(() => {
+    //   pageFlipperRef.current?.goToPage(2);
+    // }, 1000);
+  }, []);
+
   return (
     <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'row' }}>
-      <PageFlipper data={PAGES} enabled={true} single={true} />
+      <PageFlipper ref={pageFlipperRef} data={PAGES} enabled={true} single={true} />
+
+      <Input onChangeText={setText} />
+      <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
+      <Button
+        onPress={() => {
+          pageFlipperRef.current?.previousPage();
+        }}
+      >
+        PREV
+      </Button>
+      <Button
+        onPress={() => {
+          pageFlipperRef.current?.nextPage();
+        }}
+      >
+        NEXT
+      </Button>
+
       {/* <ZoomView> */}
       {/* <Box flex={1}>
         <Text>SINGLE</Text>

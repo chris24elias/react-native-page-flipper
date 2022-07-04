@@ -91,47 +91,39 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         return;
       }
 
-      if (index === state.pageIndex) {
-        console.log('same page');
-        return;
-      }
-
       if (isAnimatingRef.current) {
         console.log('is already animating');
         return;
       }
 
+      if (index === state.pageIndex) {
+        console.log('same page');
+        return;
+      }
+
       if (index > state.pageIndex) {
         setState({
-          // pageIndex: index,
           next: state.pages[index],
           nextPageIndex: index,
         });
-        setTimeout(() => {
-          nextBookPage.current?.turnPage();
-        }, 50);
       } else {
         setState({
-          // pageIndex: index,
           prev: state.pages[index],
           nextPageIndex: index,
         });
-        setTimeout(() => {
-          prevBookPage.current?.turnPage();
-        }, 50);
       }
-
-      // const prev = state.pages[index - 1];
-      // const current = state.pages[index];
-      // const next = state.pages[index + 1];
-      // setState({
-      //   pageIndex: index,
-      //   prev,
-      //   current,
-      //   next,
-      // });
     };
-    console.log('STATE', state.nextPageIndex);
+
+    useEffect(() => {
+      if (state.nextPageIndex !== undefined) {
+        if (state.nextPageIndex > state.pageIndex) {
+          nextBookPage.current?.turnPage();
+        } else {
+          prevBookPage.current?.turnPage();
+        }
+      }
+    }, [state.nextPageIndex]);
+
     React.useImperativeHandle(
       ref,
       () => ({
@@ -258,8 +250,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       );
     };
 
-    const containerSize = getContainerSize();
-
     const getBookImageStyle = (right: boolean, front: boolean) => {
       const imageStyle: any = {
         height: containerSize.height,
@@ -280,10 +270,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       return imageStyle;
     };
 
+    const containerSize = getContainerSize();
+
     const { pageIndex, pages, prev, current, next } = state;
-    // const prev = pages[pageIndex - 1];
-    // const current = pages[pageIndex];
-    // const next = pages[pageIndex + 1];
 
     const isFirstPage = pageIndex === 0;
     const isLastPage = pageIndex === pages.length - 1;

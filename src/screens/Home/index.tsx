@@ -1,6 +1,6 @@
 import { PageFlipper, PageFlipperInstance } from '@/PageFlipper';
 import { RootStackScreenProps } from '@/types';
-import { Box, Button, Text } from 'native-base';
+import { Box, Button, Column, Input, Row, Text } from 'native-base';
 import * as React from 'react';
 import { Switch } from 'react-native';
 
@@ -51,14 +51,14 @@ const SINGLE_PAGES = [
 
 const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const pageFlipperRef = React.useRef<PageFlipperInstance>(null);
-  // const [text, setText] = React.useState('');
+  const [text, setText] = React.useState('');
   const [isPortrait, setIsPortrait] = React.useState(true);
   const [isSingle, setIsSingle] = React.useState(true);
 
   const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
 
   return (
-    <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }}>
+    <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
       <PageFlipper
         ref={pageFlipperRef}
         data={data}
@@ -67,29 +67,35 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         portrait={isPortrait}
       />
 
-      {/* <Button onPress={() => setIsSingle(!isSingle)}>change single</Button>
-      <Button onPress={() => setIsPortrait(!isPortrait)}>change orientation</Button> */}
-      <Text>is portrait</Text>
-      <Switch value={isPortrait} onValueChange={() => setIsPortrait(!isPortrait)} />
-      <Text>is single</Text>
-      <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
+      <Row alignSelf="center" space={2} alignItems="center" mt="m">
+        <Column>
+          <Text>is portrait</Text>
+          <Switch value={isPortrait} onValueChange={() => setIsPortrait(!isPortrait)} />
+        </Column>
+        <Column>
+          <Text>is single</Text>
+          <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
+        </Column>
 
-      {/* <Input onChangeText={setText} />
-      <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button> */}
-      <Button
-        onPress={() => {
-          pageFlipperRef.current?.previousPage();
-        }}
-      >
-        PREV
-      </Button>
-      <Button
-        onPress={() => {
-          pageFlipperRef.current?.nextPage();
-        }}
-      >
-        NEXT
-      </Button>
+        <Input width={'20'} onChangeText={setText} />
+        <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
+      </Row>
+      <Row alignSelf="center" space={1} mt="m">
+        <Button
+          onPress={() => {
+            pageFlipperRef.current?.previousPage();
+          }}
+        >
+          PREV
+        </Button>
+        <Button
+          onPress={() => {
+            pageFlipperRef.current?.nextPage();
+          }}
+        >
+          NEXT
+        </Button>
+      </Row>
 
       {/* <ZoomView> */}
       {/* <Box flex={1}>

@@ -58,7 +58,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     const prevBookPage = useRef<BookPageInstance>(null);
     const nextBookPage = useRef<BookPageInstance>(null);
     const portraitBookPage = useRef<PortraitBookInstance>(null);
-
     const previousPortrait = usePrevious(portrait);
 
     useEffect(() => {
@@ -180,7 +179,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
         const realImageSize = await getImageSize(data[0]);
         let adjustedIndex = state.pageIndex;
-        if (previousPortrait !== undefined && previousPortrait !== portrait) {
+        if (previousPortrait !== undefined && previousPortrait !== portrait && single) {
           if (portrait) {
             adjustedIndex *= 2;
           } else {
@@ -327,6 +326,8 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     if (!state.initialized) {
       return null;
     }
+
+    console.log('STATE', { pageIndex, isPortrait: state.isPortrait, single });
 
     return (
       <View style={styles.container} onLayout={onLayout}>

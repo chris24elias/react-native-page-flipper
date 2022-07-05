@@ -190,8 +190,8 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
                   width: '30%',
                   zIndex: 10000,
                   left: 0,
-                  backgroundColor: 'red',
-                  opacity: 0.2,
+                  // backgroundColor: 'red',
+                  // opacity: 0.2,
                 }}
               />
             )}
@@ -207,8 +207,8 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
                   width: '30%',
                   zIndex: 10000,
                   right: 0,
-                  backgroundColor: 'blue',
-                  opacity: 0.2,
+                  // backgroundColor: 'blue',
+                  // opacity: 0.2,
                 }}
               />
             )}

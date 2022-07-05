@@ -18,7 +18,7 @@ import { Page, Size } from '../types';
 import BackShadow from '../BookPage/BackShadow';
 import FrontShadow from '../BookPage/FrontShadow';
 import PageShadow from '../BookPage/PageShadow';
-import { snapPoint } from '../utils/utils';
+import { clamp, snapPoint } from '../utils/utils';
 
 export type IBookPageProps = {
   current: Page;
@@ -148,12 +148,22 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
           runOnJS(onPageFlip)(id, false);
         } else {
           runOnJS(setIsAnimating)(true);
-          rotateYAsDeg.value = withTiming(degrees, timingConfig, () => {
-            if (snapTo === 0) {
-              //
-            }
-            runOnJS(onPageFlip)(id, false);
-          });
+
+          const progress = Math.abs(rotateYAsDeg.value - degrees) / 100;
+          const duration = clamp(800 * progress - Math.abs(0.1 * event.velocityX), 350, 1000);
+          rotateYAsDeg.value = withTiming(
+            degrees,
+            {
+              ...timingConfig,
+              duration: duration,
+            },
+            () => {
+              if (snapTo === 0) {
+                //
+              }
+              runOnJS(onPageFlip)(id, false);
+            },
+          );
         }
       },
     });

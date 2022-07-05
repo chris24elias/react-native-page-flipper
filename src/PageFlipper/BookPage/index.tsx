@@ -19,7 +19,7 @@ import FrontShadow from './FrontShadow';
 import PageShadow from './PageShadow';
 import { BookSpine } from './BookSpine';
 import { BookSpine2 } from './BookSpine2';
-import { snapPoint } from '../utils/utils';
+import { clamp, snapPoint } from '../utils/utils';
 export type IBookPageProps = {
   right: boolean;
   front: Page;
@@ -36,18 +36,6 @@ export type IBookPageProps = {
 
 export type BookPageInstance = {
   turnPage: () => void;
-};
-
-export const diffClamp = (val: number, min: number, max: number) => {
-  'worklet';
-
-  if (val >= max) {
-    return max;
-  }
-  if (val <= min) {
-    return min;
-  }
-  return val;
 };
 
 const timingConfig: WithTimingConfig = {
@@ -215,7 +203,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
           runOnJS(setIsAnimating)(true);
 
           const progress = Math.abs(rotateYAsDeg.value - degrees) / 100;
-          const duration = diffClamp(800 * progress - Math.abs(0.1 * event.velocityX), 200, 1000);
+          const duration = clamp(800 * progress - Math.abs(0.1 * event.velocityX), 350, 1000);
 
           rotateYAsDeg.value = withTiming(
             degrees,

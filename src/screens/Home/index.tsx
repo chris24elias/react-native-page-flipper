@@ -1,5 +1,6 @@
 import { PageFlipper, PageFlipperInstance } from '@/PageFlipper';
 import { RootStackScreenProps } from '@/types';
+import { IS_WEB } from '@/utils/Constants';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';
 import * as React from 'react';
 import { Switch } from 'react-native';
@@ -56,11 +57,6 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const [isPortrait, setIsPortrait] = React.useState(true);
   const [isSingle, setIsSingle] = React.useState(true);
   const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
-  React.useEffect(() => {
-    Orientation.addOrientationListener((orientation) => {
-      console.log('ORIENTATION CHANGE', orientation);
-    });
-  }, []);
 
   return (
     <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
@@ -81,10 +77,12 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
               onValueChange={(val) => {
                 setIsPortrait(val);
 
-                if (val) {
-                  Orientation.lockToPortrait();
-                } else {
-                  Orientation.lockToLandscape();
+                if (!IS_WEB) {
+                  if (val) {
+                    Orientation.lockToPortrait();
+                  } else {
+                    Orientation.lockToLandscape();
+                  }
                 }
               }}
             />

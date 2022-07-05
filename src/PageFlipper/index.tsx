@@ -6,7 +6,7 @@ import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
 import { BookPageBackground } from './BookPageBackground';
 import Image from './Components/Image';
-import { BookPagePortrait } from './portrait/BookPagePortrait';
+import { BookPagePortrait, PortraitBookInstance } from './portrait/BookPagePortrait';
 import { Page, Size } from './types';
 import cacheImages from './utils/cacheImages';
 import { getImageSize } from './utils/utils';
@@ -57,17 +57,18 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     const isAnimatingRef = useRef(false);
     const prevBookPage = useRef<BookPageInstance>(null);
     const nextBookPage = useRef<BookPageInstance>(null);
+    const portraitBookPage = useRef<PortraitBookInstance>(null);
 
     const previousPortrait = usePrevious(portrait);
 
     useEffect(() => {
       initialize();
-    }, [data, portrait]);
+    }, [data, portrait, single]);
 
     const previousPage = () => {
       const newIndex = state.pageIndex - 1;
       if (newIndex < 0) {
-        console.log('no previous page');
+        console.warn('no previous page');
         return;
       }
 
@@ -77,7 +78,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     const nextPage = () => {
       const newIndex = state.pageIndex + 1;
       if (newIndex > state.pages.length - 1) {
-        console.log('no next page');
+        console.warn('no next page');
         return;
       }
 
@@ -86,26 +87,27 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
     const goToPage = (index: number) => {
       if (index === undefined || index === null) {
+        console.warn('index cannot be undefined or null');
         return;
       }
 
       if (typeof index !== 'number' || isNaN(index)) {
-        console.log('index must be a number');
+        console.warn('index must be a number');
         return;
       }
 
       if (index < 0 || index > state.pages.length - 1) {
-        console.log('invalid page');
+        console.warn('invalid page');
         return;
       }
 
       if (isAnimatingRef.current) {
-        console.log('is already animating');
+        console.warn('is already animating');
         return;
       }
 
       if (index === state.pageIndex) {
-        console.log('same page');
+        console.warn('same page');
         return;
       }
 
@@ -124,10 +126,14 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
     useEffect(() => {
       if (state.nextPageIndex !== undefined) {
-        if (state.nextPageIndex > state.pageIndex) {
-          nextBookPage.current?.turnPage();
+        if (!state.isPortrait) {
+          if (state.nextPageIndex > state.pageIndex) {
+            nextBookPage.current?.turnPage();
+          } else {
+            prevBookPage.current?.turnPage();
+          }
         } else {
-          prevBookPage.current?.turnPage();
+          portraitBookPage.current?.turnPage(state.nextPageIndex > state.pageIndex ? 1 : -1);
         }
       }
     }, [state.nextPageIndex]);
@@ -175,13 +181,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         const realImageSize = await getImageSize(data[0]);
         let adjustedIndex = state.pageIndex;
         if (previousPortrait !== undefined && previousPortrait !== portrait) {
-          // adjustedIndex = adjustedIndex % 2 === 0 ? adjustedIndex : adjustedIndex - 1;
-
           if (portrait) {
-            console.log('GOING PORTRAIT');
             adjustedIndex *= 2;
           } else {
-            console.log('GOING LANDSCAPE');
             adjustedIndex = adjustedIndex % 2 === 0 ? adjustedIndex / 2 : (adjustedIndex - 1) / 2;
           }
         }
@@ -201,11 +203,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
           isPortrait: portrait,
         });
       } catch (error) {
-        console.log('error', error);
+        console.error('error', error);
       }
     };
-
-    console.log('index', state.pageIndex);
 
     const onLayout = (e: LayoutChangeEvent) => {
       const { height, width } = e.nativeEvent.layout;
@@ -267,7 +267,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     };
 
     const setIsAnimating = (val: boolean) => {
-      console.log('setting is animating', val);
       setState({
         isAnimating: val,
       });
@@ -287,29 +286,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     };
 
     const getBookImageStyle = (right: boolean, front: boolean) => {
-      if (state.isPortrait) {
-        const imageStyle: any = {
-          height: containerSize.height,
-          width: containerSize.width,
-          position: 'absolute',
-        };
-
-        const offset = single ? 0 : -containerSize.width / 2;
-
-        if ((front && right) || (!front && right)) {
-          // front right or back right
-          imageStyle['left'] = offset;
-        } else if (front && !right) {
-          // front left
-          imageStyle['right'] = offset;
-        }
-
-        return imageStyle;
-      }
-
       const imageStyle: any = {
         height: containerSize.height,
-        width: single ? containerSize.width / 2 : containerSize.width,
+        width: single && !state.isPortrait ? containerSize.width / 2 : containerSize.width,
         position: 'absolute',
       };
 
@@ -406,9 +385,11 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                   {...bookPageProps}
                   current={current}
                   prev={prev}
+                  next={next}
                   onPageFlip={onPageFlipped}
                   key={`right${pageIndex}`}
                   pageIndex={state.pageIndex}
+                  ref={portraitBookPage}
                 />
               </View>
               {next && (
@@ -419,7 +400,13 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                     overflow: 'hidden',
                   }}
                 >
-                  <Image source={{ uri: next.right }} style={getBookImageStyle(true, false)} />
+                  <Image
+                    source={{ uri: next.right }}
+                    style={{
+                      height: '100%',
+                      width: '100%',
+                    }}
+                  />
                 </View>
               )}
             </View>

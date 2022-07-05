@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -30,150 +30,196 @@ export type IBookPageProps = {
   enabled: boolean;
   getBookImageStyle: (right: boolean, front: boolean) => any;
   pageIndex: number;
+  isAnimatingRef: React.MutableRefObject<boolean>;
+  next: Page;
 };
 
-const BookPagePortrait: React.FC<IBookPageProps> = ({
-  current,
-  prev,
-  onPageFlip,
-  containerSize,
-  enabled,
-  setIsAnimating,
-  getBookImageStyle,
-  isAnimating,
-}) => {
-  const tapRef = useRef(null);
-  const panRef = useRef(null);
-  const containerWidth = containerSize.width;
+export type PortraitBookInstance = { turnPage };
 
-  const pSnapPoints = !prev
-    ? [-containerSize.width, 0]
-    : [-containerSize.width, 0, containerSize.width];
+const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
+  (
+    {
+      current,
+      prev,
+      onPageFlip,
+      containerSize,
+      enabled,
+      setIsAnimating,
+      getBookImageStyle,
+      isAnimating,
+      isAnimatingRef,
+      next,
+    },
+    ref,
+  ) => {
+    const containerWidth = containerSize.width;
 
-  const timingConfig: WithTimingConfig = {
-    duration: 800,
-    easing: Easing.inOut(Easing.cubic),
-  };
-  const x = useSharedValue(0);
+    const pSnapPoints = !prev
+      ? [-containerSize.width, 0]
+      : [-containerSize.width, 0, containerSize.width];
 
-  const isMounted = useRef(false);
-  const rotateYAsDeg = useSharedValue(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  // might not need this
-  // useEffect(() => {
-  //   if (!enabled) {
-  //     setIsDragging(false);
-  //   }
-  // }, [enabled]);
-
-  // const turnPage = (id: 1 | -1) => {
-  //   setIsDragging(true);
-  //   setIsAnimating(true);
-
-  //   rotateYAsDeg.value = withTiming(id < 0 ? -180 : 180, timingConfig, () => {
-  //     runOnJS(onPageFlip)(id, false);
-  //   });
-  // };
-
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
+    const timingConfig: WithTimingConfig = {
+      duration: 800,
+      easing: Easing.inOut(Easing.cubic),
     };
-  }, []);
+    const x = useSharedValue(0);
 
-  const getDegreesForX = (x: number) => {
-    'worklet';
+    const isMounted = useRef(false);
+    const rotateYAsDeg = useSharedValue(0);
+    const [isDragging, setIsDragging] = useState(false);
 
-    const val = interpolate(
-      x,
-      [-containerSize.width, 0, containerSize.width],
-      [180, 0, -180],
-      Extrapolate.CLAMP,
-    );
-    return val;
-  };
+    // might not need this
+    // useEffect(() => {
+    //   if (!enabled) {
+    //     setIsDragging(false);
+    //   }
+    // }, [enabled]);
 
-  const onDrag = useCallback((val: boolean) => {
-    if (!isMounted.current) {
-      return;
-    }
-    if (val) {
+    const turnPage = (id: 1 | -1) => {
       setIsDragging(true);
-    } else {
-      setIsDragging(false);
-    }
-  }, []);
+      setIsAnimating(true);
 
-  const containerStyle = useAnimatedStyle(() => {
-    return {
-      flex: 1,
-      zIndex: isDragging ? 100 : 0,
-    };
-  });
-
-  const onPanGestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    { x: number }
-  >({
-    onStart: (event, ctx) => {
-      runOnJS(onDrag)(true);
-      ctx.x = x.value;
-    },
-    onActive: (event, ctx) => {
-      const newX = ctx.x + event.translationX;
-      const degrees = getDegreesForX(newX);
-      x.value = newX;
-      rotateYAsDeg.value = degrees;
-    },
-    onEnd: (event) => {
-      const snapTo = snapPoint(x.value, event.velocityX, pSnapPoints);
-      const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
-
-      const degrees = getDegreesForX(snapTo);
-      x.value = snapTo;
-      if (rotateYAsDeg.value === degrees) {
-        // already same value
-        // debugValue('already there');
+      rotateYAsDeg.value = withTiming(id < 0 ? -180 : 180, timingConfig, () => {
         runOnJS(onPageFlip)(id, false);
-      } else {
-        runOnJS(setIsAnimating)(true);
-        rotateYAsDeg.value = withTiming(degrees, timingConfig, () => {
-          if (snapTo === 0) {
-            runOnJS(onDrag)(false);
-          }
-          runOnJS(onPageFlip)(id, false);
-        });
+      });
+    };
+
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        turnPage,
+      }),
+      [turnPage],
+    );
+
+    useEffect(() => {
+      isMounted.current = true;
+      return () => {
+        isMounted.current = false;
+      };
+    }, []);
+
+    const getDegreesForX = (x: number) => {
+      'worklet';
+
+      const val = interpolate(
+        x,
+        [-containerSize.width, 0, containerSize.width],
+        [180, 0, -180],
+        Extrapolate.CLAMP,
+      );
+      return val;
+    };
+
+    const onDrag = useCallback((val: boolean) => {
+      if (!isMounted.current) {
+        return;
       }
-    },
-  });
+      if (val) {
+        setIsDragging(true);
+      } else {
+        setIsDragging(false);
+      }
+    }, []);
 
-  const gesturesEnabled = enabled && !isAnimating;
+    const containerStyle = useAnimatedStyle(() => {
+      return {
+        flex: 1,
+        zIndex: isDragging ? 100 : 0,
+      };
+    });
 
-  const iPageProps = {
-    containerSize,
-    containerWidth,
-    getBookImageStyle,
-    rotateYAsDeg,
-  };
+    const onPanGestureHandler = useAnimatedGestureHandler<
+      PanGestureHandlerGestureEvent,
+      { x: number }
+    >({
+      onStart: (event, ctx) => {
+        runOnJS(onDrag)(true);
+        ctx.x = x.value;
+      },
+      onActive: (event, ctx) => {
+        const newX = ctx.x + event.translationX;
+        const degrees = getDegreesForX(newX);
+        x.value = newX;
+        rotateYAsDeg.value = degrees;
+      },
+      onEnd: (event) => {
+        const snapTo = snapPoint(x.value, event.velocityX, pSnapPoints);
+        const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
 
-  return (
-    <Animated.View style={containerStyle}>
-      <PanGestureHandler
-        simultaneousHandlers={tapRef}
-        onGestureEvent={onPanGestureHandler}
-        enabled={gesturesEnabled}
-        ref={panRef}
-      >
-        <Animated.View style={containerStyle}>
-          {current && <IPage page={current} right={true} {...iPageProps} />}
-          {prev && <IPage page={prev} right={false} {...iPageProps} />}
-        </Animated.View>
-      </PanGestureHandler>
-    </Animated.View>
-  );
-};
+        const degrees = getDegreesForX(snapTo);
+        x.value = snapTo;
+        if (rotateYAsDeg.value === degrees) {
+          // already same value
+          // debugValue('already there');
+          runOnJS(onPageFlip)(id, false);
+        } else {
+          runOnJS(setIsAnimating)(true);
+          rotateYAsDeg.value = withTiming(degrees, timingConfig, () => {
+            if (snapTo === 0) {
+              runOnJS(onDrag)(false);
+            }
+            runOnJS(onPageFlip)(id, false);
+          });
+        }
+      },
+    });
+
+    const gesturesEnabled = enabled && !isAnimating;
+
+    const iPageProps = {
+      containerSize,
+      containerWidth,
+      getBookImageStyle,
+      rotateYAsDeg,
+    };
+
+    return (
+      <Animated.View style={containerStyle}>
+        <PanGestureHandler onGestureEvent={onPanGestureHandler} enabled={gesturesEnabled}>
+          <Animated.View style={containerStyle}>
+            {prev && (
+              <Pressable
+                disabled={isAnimating}
+                onPress={() => {
+                  if (!isAnimatingRef.current) turnPage(-1);
+                }}
+                style={{
+                  position: 'absolute',
+                  height: '100%',
+                  width: '30%',
+                  zIndex: 10000,
+                  left: 0,
+                  backgroundColor: 'red',
+                  opacity: 0.2,
+                }}
+              />
+            )}
+            {next && (
+              <Pressable
+                disabled={isAnimating}
+                onPress={() => {
+                  if (!isAnimatingRef.current) turnPage(1);
+                }}
+                style={{
+                  position: 'absolute',
+                  height: '100%',
+                  width: '30%',
+                  zIndex: 10000,
+                  right: 0,
+                  backgroundColor: 'blue',
+                  opacity: 0.2,
+                }}
+              />
+            )}
+            {current && <IPage page={current} right={true} {...iPageProps} />}
+            {prev && <IPage page={prev} right={false} {...iPageProps} />}
+          </Animated.View>
+        </PanGestureHandler>
+      </Animated.View>
+    );
+  },
+);
 
 type IPageProps = {
   right: boolean;

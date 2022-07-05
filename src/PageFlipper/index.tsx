@@ -14,9 +14,11 @@ import { getImageSize } from './utils/utils';
 export type IPageFlipperProps = {
   data: string[];
   enabled?: boolean;
-  singleImageMode: boolean;
+  singleImageMode?: boolean;
   renderLastPage?: () => JSX.Element;
-  portrait: boolean;
+  portrait?: boolean;
+  onFlippedEnd?: (index: number) => void;
+  onFlipStart?: () => void;
 };
 
 export type PageFlipperInstance = {
@@ -39,7 +41,18 @@ type State = {
 };
 
 const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
-  ({ data, enabled = true, singleImageMode = false, renderLastPage, portrait = true }, ref) => {
+  (
+    {
+      data,
+      enabled = true,
+      singleImageMode = false,
+      renderLastPage,
+      portrait = true,
+      onFlippedEnd,
+      onFlipStart,
+    },
+    ref,
+  ) => {
     const [layout, setLayout] = useState({ height: 0, width: 0 });
     const { width, height } = layout;
     const [state, setState] = useSetState<State>({
@@ -183,8 +196,15 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
           if (portrait) {
             adjustedIndex *= 2;
           } else {
-            adjustedIndex = adjustedIndex % 2 === 0 ? adjustedIndex / 2 : (adjustedIndex - 1) / 2;
+            adjustedIndex = Math.floor(
+              adjustedIndex % 2 === 0 ? adjustedIndex / 2 : (adjustedIndex - 1) / 2,
+            );
           }
+        }
+
+        if (adjustedIndex < 0 || adjustedIndex > allPages.length - 1) {
+          // invalid index, reset to 0
+          adjustedIndex = 0;
         }
 
         const prev = allPages[adjustedIndex - 1];
@@ -254,6 +274,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       const newIndex = state.nextPageIndex !== undefined ? state.nextPageIndex : pageIndex + index;
 
       if (newIndex < 0 || newIndex > state.pages.length - 1) {
+        // this if condition theoretically should never occur in the first place, so it could be removed but it's here just in case
         console.warn('invalid page');
 
         setState({
@@ -276,6 +297,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         nextPageIndex: undefined,
       });
       isAnimatingRef.current = false;
+      if (onFlippedEnd && typeof onFlippedEnd === 'function') {
+        onFlippedEnd(newIndex);
+      }
     };
 
     const setIsAnimating = (val: boolean) => {
@@ -334,6 +358,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       onPageFlip: onPageFlipped,
       getBookImageStyle,
       single: singleImageMode,
+      onFlipStart,
     };
 
     if (!state.initialized) {

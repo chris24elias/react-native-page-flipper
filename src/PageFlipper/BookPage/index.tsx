@@ -32,6 +32,7 @@ export type IBookPageProps = {
   enabled: boolean;
   getBookImageStyle: (right: boolean, front: boolean) => any;
   single: boolean;
+  onFlipStart?: () => void;
 };
 
 export type BookPageInstance = {
@@ -57,6 +58,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
       enabled,
       getBookImageStyle,
       single,
+      onFlipStart,
     },
     ref,
   ) => {
@@ -89,7 +91,9 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
     const turnPage = () => {
       setIsDragging(true);
       setIsAnimating(true);
-
+      if (onFlipStart && typeof onFlipStart === 'function') {
+        onFlipStart();
+      }
       const id = right ? 1 : -1;
       rotateYAsDeg.value = withTiming(right ? 180 : -180, timingConfig, () => {
         runOnJS(onPageFlip)(id, false);

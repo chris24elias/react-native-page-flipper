@@ -66,6 +66,8 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         enabled={true}
         singleImageMode={isSingle}
         portrait={isPortrait}
+        onFlipStart={() => console.log('FLIP START')}
+        onFlippedEnd={(index) => console.log('FLIP END', index)}
       />
 
       <Box style={{ position: 'absolute', bottom: 0 }}>

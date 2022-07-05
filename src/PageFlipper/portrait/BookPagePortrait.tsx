@@ -32,9 +32,10 @@ export type IBookPageProps = {
   pageIndex: number;
   isAnimatingRef: React.MutableRefObject<boolean>;
   next: Page;
+  onFlipStart?: () => void;
 };
 
-export type PortraitBookInstance = { turnPage };
+export type PortraitBookInstance = { turnPage: (index: 1 | -1) => void };
 
 const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
   (
@@ -49,6 +50,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
       isAnimating,
       isAnimatingRef,
       next,
+      onFlipStart,
     },
     ref,
   ) => {
@@ -76,7 +78,9 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
 
     const turnPage = (id: 1 | -1) => {
       setIsAnimating(true);
-
+      if (onFlipStart && typeof onFlipStart === 'function') {
+        onFlipStart();
+      }
       rotateYAsDeg.value = withTiming(id < 0 ? -180 : 180, timingConfig, () => {
         runOnJS(onPageFlip)(id, false);
       });

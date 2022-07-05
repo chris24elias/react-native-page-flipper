@@ -3,6 +3,7 @@ import { RootStackScreenProps } from '@/types';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';
 import * as React from 'react';
 import { Switch } from 'react-native';
+import Orientation from 'react-native-orientation';
 
 const SINGLE_PAGES = [
   'https://up.mangadudes.com/bleach/18/bleach-9337-e60a76a126bc6ecd3211aeaad51a7dba.jpg',
@@ -54,8 +55,12 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const [text, setText] = React.useState('');
   const [isPortrait, setIsPortrait] = React.useState(true);
   const [isSingle, setIsSingle] = React.useState(true);
-
   const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
+  React.useEffect(() => {
+    Orientation.addOrientationListener((orientation) => {
+      console.log('ORIENTATION CHANGE', orientation);
+    });
+  }, []);
 
   return (
     <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
@@ -67,46 +72,48 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         portrait={isPortrait}
       />
 
-      <Row alignSelf="center" space={2} alignItems="center" mt="m">
-        <Column>
-          <Text>is portrait</Text>
-          <Switch value={isPortrait} onValueChange={() => setIsPortrait(!isPortrait)} />
-        </Column>
-        <Column>
-          <Text>is single</Text>
-          <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
-        </Column>
+      <Box style={{ position: 'absolute', bottom: 0 }}>
+        <Row alignSelf="center" space={2} alignItems="center" mt="m">
+          <Column>
+            <Text>is portrait</Text>
+            <Switch
+              value={isPortrait}
+              onValueChange={(val) => {
+                setIsPortrait(val);
 
-        <Input width={'20'} onChangeText={setText} />
-        <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
-      </Row>
-      <Row alignSelf="center" space={1} mt="m">
-        <Button
-          onPress={() => {
-            pageFlipperRef.current?.previousPage();
-          }}
-        >
-          PREV
-        </Button>
-        <Button
-          onPress={() => {
-            pageFlipperRef.current?.nextPage();
-          }}
-        >
-          NEXT
-        </Button>
-      </Row>
+                if (val) {
+                  Orientation.lockToPortrait();
+                } else {
+                  Orientation.lockToLandscape();
+                }
+              }}
+            />
+          </Column>
+          <Column>
+            <Text>is single</Text>
+            <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
+          </Column>
 
-      {/* <ZoomView> */}
-      {/* <Box flex={1}>
-        <Text>SINGLE</Text>
-        <PageFlipper data={PAGES} enabled={true} single={true} />
+          <Input width={'20'} onChangeText={setText} />
+          <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
+        </Row>
+        <Row alignSelf="center" space={1} mt="m">
+          <Button
+            onPress={() => {
+              pageFlipperRef.current?.previousPage();
+            }}
+          >
+            PREV
+          </Button>
+          <Button
+            onPress={() => {
+              pageFlipperRef.current?.nextPage();
+            }}
+          >
+            NEXT
+          </Button>
+        </Row>
       </Box>
-      <Box flex={1}>
-        <Text>NOT SINGLE</Text>
-        <PageFlipper data={PAGES} enabled={true} single={false} />
-      </Box> */}
-      {/* </ZoomView> */}
     </Box>
   );
 };

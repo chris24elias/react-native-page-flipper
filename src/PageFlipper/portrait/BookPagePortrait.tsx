@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import {
-  HandlerStateChangeEvent,
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-  State,
-  TapGestureHandler,
-  TapGestureHandlerEventPayload,
-} from 'react-native-gesture-handler';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolate,
@@ -21,22 +14,22 @@ import Animated, {
   WithTimingConfig,
 } from 'react-native-reanimated';
 import Image from '../Components/Image';
-import { Size } from '../types';
+import { Page, Size } from '../types';
 import BackShadow from '../BookPage/BackShadow';
 import FrontShadow from '../BookPage/FrontShadow';
 import PageShadow from '../BookPage/PageShadow';
 import { snapPoint } from '../utils/utils';
 
 export type IBookPageProps = {
-  current: string;
-  prev: string;
+  current: Page;
+  prev: Page;
   onPageFlip: any;
   containerSize: Size;
-
   setIsAnimating: (val: boolean) => void;
-  pageIndex: number;
   isAnimating: boolean;
   enabled: boolean;
+  getBookImageStyle: (right: boolean, front: boolean) => any;
+  pageIndex: number;
 };
 
 const BookPagePortrait: React.FC<IBookPageProps> = ({
@@ -46,7 +39,7 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
   containerSize,
   enabled,
   setIsAnimating,
-  pageIndex,
+  getBookImageStyle,
   isAnimating,
 }) => {
   const tapRef = useRef(null);
@@ -74,14 +67,14 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
   //   }
   // }, [enabled]);
 
-  const turnPage = (id: 1 | -1) => {
-    setIsDragging(true);
-    setIsAnimating(true);
+  // const turnPage = (id: 1 | -1) => {
+  //   setIsDragging(true);
+  //   setIsAnimating(true);
 
-    rotateYAsDeg.value = withTiming(id < 0 ? -180 : 180, timingConfig, () => {
-      runOnJS(onPageFlip)(id, false);
-    });
-  };
+  //   rotateYAsDeg.value = withTiming(id < 0 ? -180 : 180, timingConfig, () => {
+  //     runOnJS(onPageFlip)(id, false);
+  //   });
+  // };
 
   useEffect(() => {
     isMounted.current = true;
@@ -89,19 +82,6 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
       isMounted.current = false;
     };
   }, []);
-
-  const onSingleTap = (event: HandlerStateChangeEvent<TapGestureHandlerEventPayload>) => {
-    if (event.nativeEvent.state === State.ACTIVE) {
-      const right = event.nativeEvent.x >= containerWidth / 2;
-
-      if (!right && pageIndex === 0) {
-        console.log('cant turn left on first page');
-        return;
-      }
-
-      turnPage(right ? 1 : -1);
-    }
-  };
 
   const getDegreesForX = (x: number) => {
     'worklet';
@@ -170,32 +150,6 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
   });
 
   const gesturesEnabled = enabled && !isAnimating;
-  const getBookImageStyle = (right: boolean, front: boolean) => {
-    const imageStyle: any = {
-      height: Math.round(containerSize.height),
-      width: Math.round(containerSize.width * 2),
-      position: 'absolute',
-      backgroundColor: 'white',
-    };
-
-    const isEvenPage = pageIndex % 2 == 0;
-
-    if (front) {
-      if (isEvenPage) {
-        imageStyle.left = right ? 0 : -containerSize.width;
-      } else {
-        imageStyle.left = right ? -containerSize.width : 0;
-      }
-    } else {
-      if (isEvenPage) {
-        imageStyle.left = right ? -containerSize.width : 0;
-      } else {
-        imageStyle.left = right ? 0 : -containerSize.width;
-      }
-    }
-
-    return imageStyle;
-  };
 
   const iPageProps = {
     containerSize,
@@ -205,35 +159,25 @@ const BookPagePortrait: React.FC<IBookPageProps> = ({
   };
 
   return (
-    <TapGestureHandler
-      numberOfTaps={1}
-      onHandlerStateChange={onSingleTap}
-      ref={tapRef}
-      // simultaneousHandlers={[panRef]}
-      waitFor={panRef}
-      enabled={gesturesEnabled}
-      // hitSlop={{ right: 0, width: containerSize.width / 4 }}
-    >
-      <Animated.View style={containerStyle}>
-        <PanGestureHandler
-          simultaneousHandlers={tapRef}
-          onGestureEvent={onPanGestureHandler}
-          enabled={gesturesEnabled}
-          ref={panRef}
-        >
-          <Animated.View style={containerStyle}>
-            {current && <IPage page={current} right={true} {...iPageProps} />}
-            {prev && <IPage page={prev} right={false} {...iPageProps} />}
-          </Animated.View>
-        </PanGestureHandler>
-      </Animated.View>
-    </TapGestureHandler>
+    <Animated.View style={containerStyle}>
+      <PanGestureHandler
+        simultaneousHandlers={tapRef}
+        onGestureEvent={onPanGestureHandler}
+        enabled={gesturesEnabled}
+        ref={panRef}
+      >
+        <Animated.View style={containerStyle}>
+          {current && <IPage page={current} right={true} {...iPageProps} />}
+          {prev && <IPage page={prev} right={false} {...iPageProps} />}
+        </Animated.View>
+      </PanGestureHandler>
+    </Animated.View>
   );
 };
 
 type IPageProps = {
   right: boolean;
-  page: string;
+  page: Page;
   rotateYAsDeg: Animated.SharedValue<number>;
   containerWidth: number;
   containerSize: Size;
@@ -267,7 +211,7 @@ const IPage: React.FC<IPageProps> = ({
     const w = interpolate(rotationVal.value, [0, 180], [0, containerWidth / 2]);
 
     return {
-      width: w,
+      width: Math.ceil(w),
       zIndex: 2,
       opacity: 1,
       transform: [{ translateX: x }],
@@ -277,10 +221,18 @@ const IPage: React.FC<IPageProps> = ({
   const portraitFrontStyle = useAnimatedStyle(() => {
     const w = interpolate(rotationVal.value, [0, 160], [containerWidth, -20], Extrapolate.CLAMP);
 
-    return {
+    const style: ViewStyle = {
       zIndex: 1,
       width: Math.floor(w),
     };
+
+    if (!right) {
+      style['left'] = 0;
+    } else {
+      // style['right'] = 0;
+    }
+
+    return style;
   });
 
   const frontImageStyle = getBookImageStyle(right, true);
@@ -310,10 +262,11 @@ const IPage: React.FC<IPageProps> = ({
         <View style={styles.imageContainer}>
           <Image
             source={{
-              uri: page,
+              uri: page.left,
             }}
             style={[
               backImageStyle,
+
               {
                 opacity: 0.2,
                 transform: [{ rotateX: '180deg' }, { rotateZ: '180deg' }],
@@ -323,15 +276,20 @@ const IPage: React.FC<IPageProps> = ({
         </View>
         <BackShadow {...{ degrees: rotationVal, right: true }} />
         <FrontShadow {...shadowProps} />
-        <PageShadow {...shadowProps} />
+        <PageShadow {...shadowProps} containerSize={containerSize} />
       </Animated.View>
       {/* FRONT */}
-      <Animated.View style={[styles.imageContainer, portraitFrontStyle, {}]}>
+      <Animated.View style={[styles.imageContainer, portraitFrontStyle]}>
         <Image
           source={{
-            uri: page,
+            uri: page.left,
           }}
-          style={[frontImageStyle]}
+          style={[
+            frontImageStyle,
+            {
+              left: 0,
+            },
+          ]}
         />
       </Animated.View>
     </View>
@@ -350,8 +308,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backfaceVisibility: 'hidden',
     overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
     backgroundColor: 'white',
   },
 });

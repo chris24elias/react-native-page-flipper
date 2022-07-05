@@ -14,7 +14,7 @@ import { getImageSize } from './utils/utils';
 export type IPageFlipperProps = {
   data: string[];
   enabled?: boolean;
-  single: boolean;
+  singleImageMode: boolean;
   renderLastPage?: () => JSX.Element;
   portrait: boolean;
 };
@@ -39,7 +39,7 @@ type State = {
 };
 
 const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
-  ({ data, enabled = true, single = false, renderLastPage, portrait = true }, ref) => {
+  ({ data, enabled = true, singleImageMode = false, renderLastPage, portrait = true }, ref) => {
     const [layout, setLayout] = useState({ height: 0, width: 0 });
     const { width, height } = layout;
     const [state, setState] = useSetState<State>({
@@ -62,7 +62,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
     useEffect(() => {
       initialize();
-    }, [data, portrait, single]);
+    }, [data, portrait, singleImageMode]);
 
     const previousPage = () => {
       const newIndex = state.pageIndex - 1;
@@ -160,7 +160,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
           }
         } else {
           for (let i = 0; i < data.length; i++) {
-            if (single) {
+            if (singleImageMode) {
               allPages.push({
                 left: data[i],
                 right: data[i + 1],
@@ -179,7 +179,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
         const realImageSize = await getImageSize(data[0]);
         let adjustedIndex = state.pageIndex;
-        if (previousPortrait !== undefined && previousPortrait !== portrait && single) {
+        if (previousPortrait !== undefined && previousPortrait !== portrait && singleImageMode) {
           if (portrait) {
             adjustedIndex *= 2;
           } else {
@@ -215,7 +215,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       const size = {
         height: state.realImageSize.height,
         width:
-          single && !state.isPortrait ? state.realImageSize.width * 2 : state.realImageSize.width,
+          singleImageMode && !state.isPortrait
+            ? state.realImageSize.width * 2
+            : state.realImageSize.width,
       };
 
       let containerSize: Size;
@@ -249,7 +251,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     };
 
     const onPageFlipped = (index: number) => {
-      console.log('on page flipped', state.nextPageIndex);
       const newIndex = state.nextPageIndex !== undefined ? state.nextPageIndex : pageIndex + index;
 
       if (newIndex < 0 || newIndex > state.pages.length - 1) {
@@ -299,11 +300,11 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     const getBookImageStyle = (right: boolean, front: boolean) => {
       const imageStyle: any = {
         height: containerSize.height,
-        width: single && !state.isPortrait ? containerSize.width / 2 : containerSize.width,
+        width: singleImageMode && !state.isPortrait ? containerSize.width / 2 : containerSize.width,
         position: 'absolute',
       };
 
-      const offset = single ? 0 : -containerSize.width / 2;
+      const offset = singleImageMode ? 0 : -containerSize.width / 2;
 
       if ((front && right) || (!front && right)) {
         // front right or back right
@@ -322,7 +323,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
     const isFirstPage = pageIndex === 0;
     const isLastPage = pageIndex === pages.length - 1;
-    const shouldRenderLastPage = isLastPage && single && data.length % 2 !== 0;
+    const shouldRenderLastPage = isLastPage && singleImageMode && data.length % 2 !== 0;
 
     const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> = {
       containerSize: containerSize,
@@ -332,14 +333,12 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       isAnimatingRef: isAnimatingRef,
       onPageFlip: onPageFlipped,
       getBookImageStyle,
-      single,
+      single: singleImageMode,
     };
 
     if (!state.initialized) {
       return null;
     }
-
-    console.log('STATE', { pageIndex, isPortrait: state.isPortrait, single });
 
     return (
       <View style={styles.container} onLayout={onLayout}>

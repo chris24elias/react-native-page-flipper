@@ -64,7 +64,7 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         ref={pageFlipperRef}
         data={data}
         enabled={true}
-        single={isSingle}
+        singleImageMode={isSingle}
         portrait={isPortrait}
       />
 

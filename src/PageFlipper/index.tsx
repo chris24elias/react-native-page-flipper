@@ -251,6 +251,18 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     const onPageFlipped = (index: number) => {
       console.log('on page flipped', state.nextPageIndex);
       const newIndex = state.nextPageIndex !== undefined ? state.nextPageIndex : pageIndex + index;
+
+      if (newIndex < 0 || newIndex > state.pages.length - 1) {
+        console.warn('invalid page');
+
+        setState({
+          isAnimating: false,
+          nextPageIndex: undefined,
+        });
+        isAnimatingRef.current = false;
+        return;
+      }
+
       const prev = state.pages[newIndex - 1];
       const current = state.pages[newIndex];
       const next = state.pages[newIndex + 1];

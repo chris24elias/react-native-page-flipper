@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
@@ -66,7 +66,6 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
 
     const isMounted = useRef(false);
     const rotateYAsDeg = useSharedValue(0);
-    const [isDragging, setIsDragging] = useState(false);
 
     // might not need this
     // useEffect(() => {
@@ -76,7 +75,6 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
     // }, [enabled]);
 
     const turnPage = (id: 1 | -1) => {
-      setIsDragging(true);
       setIsAnimating(true);
 
       rotateYAsDeg.value = withTiming(id < 0 ? -180 : 180, timingConfig, () => {
@@ -111,21 +109,9 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
       return val;
     };
 
-    const onDrag = useCallback((val: boolean) => {
-      if (!isMounted.current) {
-        return;
-      }
-      if (val) {
-        setIsDragging(true);
-      } else {
-        setIsDragging(false);
-      }
-    }, []);
-
     const containerStyle = useAnimatedStyle(() => {
       return {
         flex: 1,
-        zIndex: isDragging ? 100 : 0,
       };
     });
 
@@ -134,7 +120,6 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
       { x: number }
     >({
       onStart: (event, ctx) => {
-        runOnJS(onDrag)(true);
         ctx.x = x.value;
       },
       onActive: (event, ctx) => {
@@ -147,6 +132,14 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
         const snapTo = snapPoint(x.value, event.velocityX, pSnapPoints);
         const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
 
+        if (!next && id > 0) {
+          // reset
+          x.value = withTiming(0);
+          rotateYAsDeg.value = withTiming(0);
+          // runOnJS(onDrag)(false);
+          return;
+        }
+
         const degrees = getDegreesForX(snapTo);
         x.value = snapTo;
         if (rotateYAsDeg.value === degrees) {
@@ -157,7 +150,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
           runOnJS(setIsAnimating)(true);
           rotateYAsDeg.value = withTiming(degrees, timingConfig, () => {
             if (snapTo === 0) {
-              runOnJS(onDrag)(false);
+              //
             }
             runOnJS(onPageFlip)(id, false);
           });
@@ -212,7 +205,13 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
                 }}
               />
             )}
-            {current && <IPage page={current} right={true} {...iPageProps} />}
+            {current && next ? (
+              <IPage page={current} right={true} {...iPageProps} />
+            ) : (
+              <View style={{ height: '100%', width: '100%' }}>
+                <Image source={{ uri: current.right }} style={{ height: '100%', width: '100%' }} />
+              </View>
+            )}
             {prev && <IPage page={prev} right={false} {...iPageProps} />}
           </Animated.View>
         </PanGestureHandler>

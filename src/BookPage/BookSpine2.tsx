@@ -4,7 +4,7 @@ import Animated, {
     useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Gradient } from '../Components/Gradient';
-import { Size } from '../types';
+import type { Size } from '../types';
 
 export type IBookSpine2Props = {
     right: boolean;
@@ -40,7 +40,7 @@ const shadowColors = [
 const BookSpine2: React.FC<IBookSpine2Props> = ({
     right,
     degrees,
-    containerSize,
+    // containerSize,
 }) => {
     const style = useAnimatedStyle(() => {
         const opacity = interpolate(

@@ -1,6 +1,6 @@
-import usePrevious from '@/hooks/usePrevious';
-import useSetState from '@/hooks/useSetState';
-import React, { useEffect, useState } from 'react';
+import usePrevious from './hooks/usePrevious';
+import useSetState from './hooks/useSetState';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRef } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
@@ -19,7 +19,7 @@ export type IPageFlipperProps = {
     enabled?: boolean; // gestures
     pressable?: boolean; // are the pages tappable
     singleImageMode?: boolean;
-    renderLastPage?: () => JSX.Element;
+    renderLastPage?: () => React.ReactElement;
     portrait?: boolean;
     onFlippedEnd?: (index: number) => void;
     onFlipStart?: () => void;
@@ -87,74 +87,63 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         const portraitBookPage = useRef<PortraitBookInstance>(null);
         const previousPortrait = usePrevious(portrait);
 
-        useEffect(() => {
-            initialize();
-        }, [data, portrait, singleImageMode]);
-
         const logger = (msg: string) => {
             if (debug) {
                 console.log(msg);
             }
         };
 
-        const previousPage = () => {
+        const goToPage = useCallback(
+            (index: number) => {
+                if (index === undefined || index === null) {
+                    logger('index cannot be undefined or null');
+                    return;
+                }
+
+                if (typeof index !== 'number' || isNaN(index)) {
+                    logger('index must be a number');
+                    return;
+                }
+
+                if (index < 0 || index > state.pages.length - 1) {
+                    logger('invalid page');
+                    return;
+                }
+
+                if (isAnimatingRef.current) {
+                    logger('is already animating');
+                    return;
+                }
+
+                if (index === state.pageIndex) {
+                    logger('same page');
+                    return;
+                }
+
+                if (index > state.pageIndex) {
+                    setState({
+                        next: state.pages[index],
+                        nextPageIndex: index,
+                    });
+                } else {
+                    setState({
+                        prev: state.pages[index],
+                        nextPageIndex: index,
+                    });
+                }
+            },
+            [setState, state.pageIndex, state.pages]
+        );
+
+        const previousPage = useCallback(() => {
             const newIndex = state.pageIndex - 1;
-            if (newIndex < 0) {
-                logger('no previous page');
-                return;
-            }
-
             goToPage(newIndex);
-        };
+        }, [goToPage, state.pageIndex]);
 
-        const nextPage = () => {
+        const nextPage = useCallback(() => {
             const newIndex = state.pageIndex + 1;
-            if (newIndex > state.pages.length - 1) {
-                logger('no next page');
-                return;
-            }
-
             goToPage(newIndex);
-        };
-
-        const goToPage = (index: number) => {
-            if (index === undefined || index === null) {
-                logger('index cannot be undefined or null');
-                return;
-            }
-
-            if (typeof index !== 'number' || isNaN(index)) {
-                logger('index must be a number');
-                return;
-            }
-
-            if (index < 0 || index > state.pages.length - 1) {
-                logger('invalid page');
-                return;
-            }
-
-            if (isAnimatingRef.current) {
-                logger('is already animating');
-                return;
-            }
-
-            if (index === state.pageIndex) {
-                logger('same page');
-                return;
-            }
-
-            if (index > state.pageIndex) {
-                setState({
-                    next: state.pages[index],
-                    nextPageIndex: index,
-                });
-            } else {
-                setState({
-                    prev: state.pages[index],
-                    nextPageIndex: index,
-                });
-            }
-        };
+        }, [goToPage, state.pageIndex]);
 
         useEffect(() => {
             if (state.nextPageIndex !== undefined) {
@@ -182,7 +171,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             [goToPage, nextPage, previousPage]
         );
 
-        const initialize = async () => {
+        const initialize = useCallback(async () => {
             try {
                 const allPages: Page[] = [];
 
@@ -254,7 +243,18 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             } catch (error) {
                 console.error('error', error);
             }
-        };
+        }, [
+            data,
+            portrait,
+            previousPortrait,
+            setState,
+            state.pageIndex,
+            singleImageMode,
+        ]);
+
+        useEffect(() => {
+            initialize();
+        }, [data, portrait, singleImageMode, initialize]);
 
         const onLayout = (e: LayoutChangeEvent) => {
             const { height, width } = e.nativeEvent.layout;
@@ -368,10 +368,10 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
             if ((front && right) || (!front && right)) {
                 // front right or back right
-                imageStyle['left'] = offset;
+                imageStyle.left = offset;
             } else if (front && !right) {
                 // front left
-                imageStyle['right'] = offset;
+                imageStyle.right = offset;
             }
 
             return imageStyle;
@@ -467,7 +467,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                                     next={next}
                                     onPageFlip={onPageFlipped}
                                     key={`right${pageIndex}`}
-                                    pageIndex={state.pageIndex}
                                     ref={portraitBookPage}
                                 />
                             </View>
@@ -497,6 +496,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 );
 
 export { PageFlipper };
+export default PageFlipper;
 
 const Empty = () => <View style={styles.container} />;
 

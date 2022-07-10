@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import {
     PanGestureHandler,
@@ -17,7 +17,7 @@ import Animated, {
     WithTimingConfig,
 } from 'react-native-reanimated';
 import Image from '../Components/Image';
-import { Page, Size } from '../types';
+import type { Page, Size } from '../types';
 import BackShadow from '../BookPage/BackShadow';
 import FrontShadow from '../BookPage/FrontShadow';
 import PageShadow from '../BookPage/PageShadow';
@@ -42,6 +42,11 @@ export type IBookPageProps = {
 };
 
 export type PortraitBookInstance = { turnPage: (index: 1 | -1) => void };
+
+const timingConfig: WithTimingConfig = {
+    duration: 800,
+    easing: Easing.inOut(Easing.cubic),
+};
 
 const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
     (
@@ -70,10 +75,6 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
             ? [-containerSize.width, 0]
             : [-containerSize.width, 0, containerSize.width];
 
-        const timingConfig: WithTimingConfig = {
-            duration: 800,
-            easing: Easing.inOut(Easing.cubic),
-        };
         const x = useSharedValue(0);
 
         const isMounted = useRef(false);
@@ -86,19 +87,22 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
         //   }
         // }, [enabled]);
 
-        const turnPage = (id: 1 | -1) => {
-            setIsAnimating(true);
-            if (onFlipStart && typeof onFlipStart === 'function') {
-                onFlipStart();
-            }
-            rotateYAsDeg.value = withTiming(
-                id < 0 ? -180 : 180,
-                timingConfig,
-                () => {
-                    runOnJS(onPageFlip)(id, false);
+        const turnPage = useCallback(
+            (id: 1 | -1) => {
+                setIsAnimating(true);
+                if (onFlipStart && typeof onFlipStart === 'function') {
+                    onFlipStart();
                 }
-            );
-        };
+                rotateYAsDeg.value = withTiming(
+                    id < 0 ? -180 : 180,
+                    timingConfig,
+                    () => {
+                        runOnJS(onPageFlip)(id, false);
+                    }
+                );
+            },
+            [onFlipStart, onPageFlip, rotateYAsDeg, setIsAnimating]
+        );
 
         React.useImperativeHandle(
             ref,
@@ -137,6 +141,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
             PanGestureHandlerGestureEvent,
             { x: number }
         >({
+            // @ts-ignore
             onStart: (event, ctx) => {
                 ctx.x = x.value;
                 if (onPageDragStart && typeof onPageDragStart === 'function') {

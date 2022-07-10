@@ -1,6 +1,6 @@
 import { Image } from 'react-native';
 import { runOnJS } from 'react-native-reanimated';
-import { Size } from '../types';
+import type { Size } from '../types';
 import type { TransformsStyle } from 'react-native';
 
 export const getImageSize = (uri: string): Promise<Size> =>

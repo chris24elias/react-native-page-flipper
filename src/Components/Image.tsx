@@ -2,6 +2,7 @@ import React from 'react';
 import FastImage, { FastImageProps } from 'react-native-fast-image';
 import Animated from 'react-native-reanimated';
 
+// @ts-ignore
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 
 const Image: React.FC<FastImageProps> = ({ source, ...props }) => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Gradient } from '../Components/Gradient';
-import { Size } from '../types';
+import type { Size } from '../types';
 
 export type IBookSpineProps = {
     right: boolean;

@@ -16,7 +16,7 @@ import Animated, {
     WithTimingConfig,
 } from 'react-native-reanimated';
 import Image from '../Components/Image';
-import { Page, Size } from '../types';
+import type { Page, Size } from '../types';
 import BackShadow from './BackShadow';
 import FrontShadow from './FrontShadow';
 import PageShadow from './PageShadow';
@@ -213,6 +213,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
             PanGestureHandlerGestureEvent,
             { x: number }
         >({
+            // @ts-ignore
             onStart: (event, ctx) => {
                 runOnJS(onDrag)(true);
                 if (onPageDragStart && typeof onPageDragStart === 'function') {

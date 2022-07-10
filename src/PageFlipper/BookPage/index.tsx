@@ -30,6 +30,7 @@ export type IBookPageProps = {
   setIsAnimating: (val: boolean) => void;
   isAnimating: boolean;
   enabled: boolean;
+  isPressable: boolean;
   getBookImageStyle: (right: boolean, front: boolean) => any;
   single: boolean;
   onFlipStart?: () => void;
@@ -59,6 +60,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
       setIsAnimating,
       isAnimating,
       enabled,
+      isPressable,
       getBookImageStyle,
       single,
       onFlipStart,
@@ -255,21 +257,23 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
     return (
       <PanGestureHandler onGestureEvent={onPanGestureHandler} enabled={gesturesEnabled}>
         <Animated.View style={containerStyle}>
-          <Pressable
-            disabled={isAnimating}
-            onPress={() => {
-              if (!isAnimatingRef.current) turnPage();
-            }}
-            style={[
-              {
-                position: 'absolute',
-                height: '100%',
-                width: '50%',
-                zIndex: 10000,
-              },
-              right ? { right: 0 } : { left: 0 },
-            ]}
-          />
+          {isPressable && (
+            <Pressable
+              disabled={isAnimating}
+              onPress={() => {
+                if (!isAnimatingRef.current) turnPage();
+              }}
+              style={[
+                {
+                  position: 'absolute',
+                  height: '100%',
+                  width: '50%',
+                  zIndex: 10000,
+                },
+                right ? { right: 0 } : { left: 0 },
+              ]}
+            />
+          )}
 
           {/* BACK */}
           <Animated.View style={[styles.imageContainer, backStyle, { overflow: 'visible' }]}>

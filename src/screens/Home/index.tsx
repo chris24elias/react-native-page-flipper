@@ -71,6 +71,7 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         onPageDrag={() => console.log('page dragging')}
         onPageDragStart={() => console.log('page drag start')}
         onPageDragEnd={() => console.log('page drag end')}
+        pressable={true}
       />
 
       <Box style={{ position: 'absolute', bottom: 0 }}>

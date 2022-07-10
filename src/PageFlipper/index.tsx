@@ -13,7 +13,8 @@ import { getImageSize } from './utils/utils';
 
 export type IPageFlipperProps = {
   data: string[];
-  enabled?: boolean;
+  enabled?: boolean; // gestures
+  pressable?: boolean; // are the pages tappable
   singleImageMode?: boolean;
   renderLastPage?: () => JSX.Element;
   portrait?: boolean;
@@ -51,9 +52,10 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     {
       data,
       enabled = true,
-      singleImageMode = false,
+      pressable = true,
+      singleImageMode = true,
       renderLastPage,
-      portrait = true,
+      portrait = false,
       onFlippedEnd,
       onFlipStart,
       onPageDrag,
@@ -379,6 +381,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       onPageDrag,
       onPageDragEnd,
       onPageDragStart,
+      isPressable: pressable,
     };
 
     if (!state.initialized) {

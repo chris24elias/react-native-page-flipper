@@ -1,4 +1,4 @@
-import { PageFlipper, PageFlipperInstance } from '@/PageFlipper';
+import { PageFlipper, PageFlipperInstance } from 'react-native-page-flipper';
 import { RootStackScreenProps } from '@/types';
 import { IS_WEB } from '@/utils/Constants';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';

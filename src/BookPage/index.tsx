@@ -77,6 +77,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
         const isMounted = useRef(false);
         const rotateYAsDeg = useSharedValue(0);
         const [isDragging, setIsDragging] = useState(false);
+        const isDraggingRef = useRef(false);
         const containerWidth = containerSize.width;
         const containerHeight = containerSize.height;
         const leftPSnapPoints = [0, containerWidth];
@@ -99,7 +100,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
             };
         }, []);
 
-        const turnPage = () => {
+        const turnPage = useCallback(() => {
             setIsDragging(true);
             setIsAnimating(true);
             if (onFlipStart && typeof onFlipStart === 'function') {
@@ -113,7 +114,14 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
                     runOnJS(onPageFlip)(id, false);
                 }
             );
-        };
+        }, [
+            onFlipStart,
+            setIsDragging,
+            right,
+            onPageFlip,
+            rotateYAsDeg,
+            setIsAnimating,
+        ]);
 
         React.useImperativeHandle(
             ref,
@@ -127,11 +135,14 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
             if (!isMounted.current) {
                 return;
             }
-            if (val) {
-                setIsDragging(true);
-            } else {
-                setIsDragging(false);
+
+            if (isDraggingRef.current === val) {
+                // same value
+                return;
             }
+
+            setIsDragging(val);
+            isDraggingRef.current = val;
         }, []);
 
         const backStyle = useAnimatedStyle(() => {
@@ -215,13 +226,13 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
         >({
             // @ts-ignore
             onStart: (event, ctx) => {
-                runOnJS(onDrag)(true);
                 if (onPageDragStart && typeof onPageDragStart === 'function') {
                     runOnJS(onPageDragStart)();
                 }
                 ctx.x = x.value;
             },
             onActive: (event, ctx) => {
+                runOnJS(onDrag)(true);
                 x.value = ctx.x + event.translationX;
                 rotateYAsDeg.value = interpolate(
                     x.value,

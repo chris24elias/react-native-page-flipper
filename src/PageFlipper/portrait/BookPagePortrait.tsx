@@ -29,10 +29,12 @@ export type IBookPageProps = {
   isAnimating: boolean;
   enabled: boolean;
   getBookImageStyle: (right: boolean, front: boolean) => any;
-  pageIndex: number;
   isAnimatingRef: React.MutableRefObject<boolean>;
   next: Page;
   onFlipStart?: () => void;
+  onPageDragStart?: () => void;
+  onPageDrag?: () => void;
+  onPageDragEnd?: () => void;
 };
 
 export type PortraitBookInstance = { turnPage: (index: 1 | -1) => void };
@@ -51,6 +53,9 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
       isAnimatingRef,
       next,
       onFlipStart,
+      onPageDrag,
+      onPageDragEnd,
+      onPageDragStart,
     },
     ref,
   ) => {
@@ -125,14 +130,24 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
     >({
       onStart: (event, ctx) => {
         ctx.x = x.value;
+        if (onPageDragStart && typeof onPageDragStart === 'function') {
+          runOnJS(onPageDragStart)();
+        }
       },
       onActive: (event, ctx) => {
         const newX = ctx.x + event.translationX;
         const degrees = getDegreesForX(newX);
         x.value = newX;
         rotateYAsDeg.value = degrees;
+        if (onPageDrag && typeof onPageDrag === 'function') {
+          runOnJS(onPageDrag)();
+        }
       },
       onEnd: (event) => {
+        if (onPageDragEnd && typeof onPageDragEnd === 'function') {
+          runOnJS(onPageDragEnd)();
+        }
+
         const snapTo = snapPoint(x.value, event.velocityX, pSnapPoints);
         const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
 

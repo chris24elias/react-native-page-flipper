@@ -33,6 +33,9 @@ export type IBookPageProps = {
   getBookImageStyle: (right: boolean, front: boolean) => any;
   single: boolean;
   onFlipStart?: () => void;
+  onPageDragStart?: () => void;
+  onPageDrag?: () => void;
+  onPageDragEnd?: () => void;
 };
 
 export type BookPageInstance = {
@@ -59,6 +62,9 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
       getBookImageStyle,
       single,
       onFlipStart,
+      onPageDrag,
+      onPageDragEnd,
+      onPageDragStart,
     },
     ref,
   ) => {
@@ -184,6 +190,9 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
     >({
       onStart: (event, ctx) => {
         runOnJS(onDrag)(true);
+        if (onPageDragStart && typeof onPageDragStart === 'function') {
+          runOnJS(onPageDragStart)();
+        }
         ctx.x = x.value;
       },
       onActive: (event, ctx) => {
@@ -194,8 +203,16 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
           [180, 0, -180],
           Extrapolate.CLAMP,
         );
+
+        if (onPageDrag && typeof onPageDrag === 'function') {
+          runOnJS(onPageDrag)();
+        }
       },
       onEnd: (event) => {
+        if (onPageDragEnd && typeof onPageDragEnd === 'function') {
+          runOnJS(onPageDragEnd)();
+        }
+
         const snapTo = snapPoint(x.value, event.velocityX, pSnapPoints);
         const id = snapTo > 0 ? -1 : snapTo < 0 ? 1 : 0;
         const degrees = snapTo > 0 ? -180 : snapTo < 0 ? 180 : 0;

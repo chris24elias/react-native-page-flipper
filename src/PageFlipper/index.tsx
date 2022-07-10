@@ -19,6 +19,10 @@ export type IPageFlipperProps = {
   portrait?: boolean;
   onFlippedEnd?: (index: number) => void;
   onFlipStart?: () => void;
+
+  onPageDragStart?: () => void;
+  onPageDrag?: () => void;
+  onPageDragEnd?: () => void;
 };
 
 export type PageFlipperInstance = {
@@ -52,6 +56,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       portrait = true,
       onFlippedEnd,
       onFlipStart,
+      onPageDrag,
+      onPageDragEnd,
+      onPageDragStart,
     },
     ref,
   ) => {
@@ -369,6 +376,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       getBookImageStyle,
       single: singleImageMode,
       onFlipStart,
+      onPageDrag,
+      onPageDragEnd,
+      onPageDragStart,
     };
 
     if (!state.initialized) {

@@ -68,6 +68,9 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         portrait={isPortrait}
         onFlipStart={() => console.log('FLIP START')}
         onFlippedEnd={(index) => console.log('FLIP END', index)}
+        onPageDrag={() => console.log('page dragging')}
+        onPageDragStart={() => console.log('page drag start')}
+        onPageDragEnd={() => console.log('page drag end')}
       />
 
       <Box style={{ position: 'absolute', bottom: 0 }}>

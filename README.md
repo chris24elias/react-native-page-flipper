@@ -1,27 +1,19 @@
-## Includes
+### Props
 
-- React-native 0.68.2
-- React-Navigation v6
-- Axios and React Query for REST APIs
-- Localization with react-i18next
-- Pre-installed with Reanimated 2 and Gesture-Handler
-- React Native SVG
-- Native-Base for UI and theming
-- Husky and ESlint
-- Reactotron for debugging
+| Prop name       | Type              | Default value | Description                                                                                                                                                                         |
+| --------------- | ----------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data            | string[]          | undefined     | The pages you want to render, an array of image urls                                                                                                                                |
+| enabled         | bool              | true          | enables / disables the pan gesture handler of the pages                                                                                                                             |
+| singleImageMode | bool              | true          | Defines whether each page is treated as a single image or two in one. (see below)                                                                                                   |
+| renderLastPage  | () => JSX.Element | undefined     | optional function to render the last page (only applies when not in portrait mode and have an odd number of pages)                                                                  |
+| portrait        | bool              | false         | sets portrait mode (viewing a single page at a time, see below)                                                                                                                     |
+| onFlippedEnd    | Function          | undefined     | Callback for when the page has finished flipping                                                                                                                                    |
+| onFlippedStart  | Function          | undefined     | Callback for when the page has started flipping, (does not trigger when user begins dragging the page, only when manually flipped by tapping or calling one of the exposed methods) |
 
-## Getting Started
+### Methods
 
-**Step 1:** Clone and Install
-
-```sh
-
-$ git clone https://github.com/chris24elias/react-native-expo-template-2022.git
-
-$ cd react-native-expo-template-2022
-
-$ rm -rf ./.git
-
-$ yarn
-
-```
+| Method name  | Description                       |
+| ------------ | --------------------------------- |
+| goToPage     | flips to the page index passed in |
+| previousPage | flips to the previous page        |
+| nextPage     | flips to the next page            |

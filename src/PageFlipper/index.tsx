@@ -40,6 +40,8 @@ type State = {
   isPortrait: boolean;
 };
 
+const debug = true;
+
 const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
   (
     {
@@ -77,10 +79,16 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
       initialize();
     }, [data, portrait, singleImageMode]);
 
+    const logger = (msg: string) => {
+      if (debug) {
+        console.log(msg);
+      }
+    };
+
     const previousPage = () => {
       const newIndex = state.pageIndex - 1;
       if (newIndex < 0) {
-        console.warn('no previous page');
+        logger('no previous page');
         return;
       }
 
@@ -90,7 +98,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     const nextPage = () => {
       const newIndex = state.pageIndex + 1;
       if (newIndex > state.pages.length - 1) {
-        console.warn('no next page');
+        logger('no next page');
         return;
       }
 
@@ -99,27 +107,27 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
     const goToPage = (index: number) => {
       if (index === undefined || index === null) {
-        console.warn('index cannot be undefined or null');
+        logger('index cannot be undefined or null');
         return;
       }
 
       if (typeof index !== 'number' || isNaN(index)) {
-        console.warn('index must be a number');
+        logger('index must be a number');
         return;
       }
 
       if (index < 0 || index > state.pages.length - 1) {
-        console.warn('invalid page');
+        logger('invalid page');
         return;
       }
 
       if (isAnimatingRef.current) {
-        console.warn('is already animating');
+        logger('is already animating');
         return;
       }
 
       if (index === state.pageIndex) {
-        console.warn('same page');
+        logger('same page');
         return;
       }
 
@@ -191,6 +199,8 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         cacheImages(data.map((uri) => ({ uri })));
 
         const realImageSize = await getImageSize(data[0]);
+
+        // this is not 100% yet, still has some edge cases where it fails
         let adjustedIndex = state.pageIndex;
         if (previousPortrait !== undefined && previousPortrait !== portrait && singleImageMode) {
           if (portrait) {
@@ -275,7 +285,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
       if (newIndex < 0 || newIndex > state.pages.length - 1) {
         // this if condition theoretically should never occur in the first place, so it could be removed but it's here just in case
-        console.warn('invalid page');
+        logger('invalid page');
 
         setState({
           isAnimating: false,

@@ -5,19 +5,19 @@ import Animated from 'react-native-reanimated';
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 
 const Image: React.FC<FastImageProps> = ({ source, ...props }) => {
-  return (
-    <AnimatedFastImage
-      {...props}
-      source={{
-        //@ts-ignore
-        ...source,
-        priority: 'high',
-        // cache: 'cacheOnly',
-      }}
-      resizeMode="contain"
-      // resizeMode="cover"
-    />
-  );
+    return (
+        <AnimatedFastImage
+            {...props}
+            source={{
+                //@ts-ignore
+                ...source,
+                priority: 'high',
+                // cache: 'cacheOnly',
+            }}
+            resizeMode="contain"
+            // resizeMode="cover"
+        />
+    );
 };
 
 export default React.memo(Image);

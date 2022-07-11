@@ -28,6 +28,7 @@ export type IPageFlipperProps = {
     onPageDrag?: () => void;
     onPageDragEnd?: () => void;
     onEndReached?: () => void;
+    onInitialized?: (props: any) => void;
 };
 
 export type PageFlipperInstance = {
@@ -66,6 +67,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             onPageDragEnd,
             onPageDragStart,
             onEndReached,
+            onInitialized,
         },
         ref
     ) => {
@@ -255,6 +257,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                     pageIndex: adjustedIndex,
                     isPortrait: portrait,
                 });
+
+                onInitialized &&
+                    onInitialized({ pages: allPages, index: adjustedIndex });
             } catch (error) {
                 console.error('error', error);
             }
@@ -265,6 +270,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             setState,
             state.pageIndex,
             singleImageMode,
+            onInitialized,
         ]);
 
         useEffect(() => {
@@ -545,8 +551,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     }
 );
 
-export { PageFlipper };
-export default PageFlipper;
+export default React.memo(PageFlipper);
 
 const Empty = () => <View style={styles.container} />;
 

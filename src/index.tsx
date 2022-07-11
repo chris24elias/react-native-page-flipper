@@ -175,7 +175,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             [goToPage, nextPage, previousPage]
         );
 
-        const initialize = useCallback(async () => {
+        const initialize = async () => {
             try {
                 const allPages: Page[] = [];
 
@@ -263,19 +263,11 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             } catch (error) {
                 console.error('error', error);
             }
-        }, [
-            data,
-            portrait,
-            previousPortrait,
-            setState,
-            state.pageIndex,
-            singleImageMode,
-            onInitialized,
-        ]);
+        };
 
         useEffect(() => {
             initialize();
-        }, [data, portrait, singleImageMode, initialize]);
+        }, [data, portrait, singleImageMode]);
 
         const onLayout = (e: LayoutChangeEvent) => {
             const { height, width } = e.nativeEvent.layout;

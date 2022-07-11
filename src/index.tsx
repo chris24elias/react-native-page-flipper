@@ -27,6 +27,7 @@ export type IPageFlipperProps = {
     onPageDragStart?: () => void;
     onPageDrag?: () => void;
     onPageDragEnd?: () => void;
+    onEndReached?: () => void;
 };
 
 export type PageFlipperInstance = {
@@ -64,6 +65,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             onPageDrag,
             onPageDragEnd,
             onPageDragStart,
+            onEndReached,
         },
         ref
     ) => {
@@ -352,6 +354,10 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             isAnimatingRef.current = false;
             if (onFlippedEnd && typeof onFlippedEnd === 'function') {
                 onFlippedEnd(newIndex);
+            }
+
+            if (newIndex === state.pages.length - 1) {
+                onEndReached && onEndReached();
             }
         };
 

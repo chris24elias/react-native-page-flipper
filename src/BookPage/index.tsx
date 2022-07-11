@@ -36,7 +36,7 @@ export type IBookPageProps = {
     isPressable: boolean;
     getBookImageStyle: (right: boolean, front: boolean) => any;
     single: boolean;
-    onFlipStart?: () => void;
+    onFlipStart?: (id: number) => void;
     onPageDragStart?: () => void;
     onPageDrag?: () => void;
     onPageDragEnd?: () => void;
@@ -103,10 +103,11 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
         const turnPage = useCallback(() => {
             setIsDragging(true);
             setIsAnimating(true);
-            if (onFlipStart && typeof onFlipStart === 'function') {
-                onFlipStart();
-            }
             const id = right ? 1 : -1;
+
+            if (onFlipStart && typeof onFlipStart === 'function') {
+                onFlipStart(id);
+            }
             rotateYAsDeg.value = withTiming(
                 right ? 180 : -180,
                 timingConfig,

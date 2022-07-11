@@ -22,7 +22,7 @@ export type IPageFlipperProps = {
     renderLastPage?: () => React.ReactElement;
     portrait?: boolean;
     onFlippedEnd?: (index: number) => void;
-    onFlipStart?: () => void;
+    onFlipStart?: (id: number) => void;
 
     onPageDragStart?: () => void;
     onPageDrag?: () => void;

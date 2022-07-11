@@ -176,11 +176,24 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                 const allPages: Page[] = [];
 
                 if (portrait) {
-                    for (let i = 0; i < data.length; i++) {
-                        allPages[i] = {
-                            left: data[i],
-                            right: data[i],
-                        };
+                    if (!singleImageMode) {
+                        data.forEach((page) => {
+                            allPages.push({
+                                left: page,
+                                right: page,
+                            });
+                            allPages.push({
+                                left: page,
+                                right: page,
+                            });
+                        });
+                    } else {
+                        for (let i = 0; i < data.length; i++) {
+                            allPages[i] = {
+                                left: data[i],
+                                right: data[i],
+                            };
+                        }
                     }
                 } else {
                     for (let i = 0; i < data.length; i++) {
@@ -262,13 +275,20 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         };
 
         const getContainerSize = () => {
-            const size = {
+            let size = {
                 height: state.realImageSize.height,
                 width:
                     singleImageMode && !state.isPortrait
                         ? state.realImageSize.width * 2
                         : state.realImageSize.width,
             };
+
+            if (!singleImageMode && state.isPortrait) {
+                size = {
+                    height: state.realImageSize.height,
+                    width: state.realImageSize.width / 2,
+                };
+            }
 
             let containerSize: Size;
 
@@ -355,6 +375,31 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         };
 
         const getBookImageStyle = (right: boolean, front: boolean) => {
+            if (!singleImageMode && state.isPortrait) {
+                const imageStyle: any = {
+                    height: containerSize.height,
+                    width: containerSize.width * 2,
+                    position: 'absolute',
+                };
+
+                const isEvenPage = state.pageIndex % 2 === 0;
+
+                if (front) {
+                    if (isEvenPage) {
+                        imageStyle.left = right ? 0 : -containerSize.width;
+                    } else {
+                        imageStyle.left = right ? -containerSize.width : 0;
+                    }
+                } else {
+                    if (isEvenPage) {
+                        imageStyle.left = right ? -containerSize.width : 0;
+                    } else {
+                        imageStyle.left = right ? 0 : -containerSize.width;
+                    }
+                }
+                return imageStyle;
+            }
+
             const imageStyle: any = {
                 height: containerSize.height,
                 width:
@@ -366,7 +411,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
             const offset = singleImageMode ? 0 : -containerSize.width / 2;
 
-            if ((front && right) || (!front && right)) {
+            if (state.isPortrait && front) {
+                imageStyle.left = 0;
+            } else if ((front && right) || (!front && right)) {
                 // front right or back right
                 imageStyle.left = offset;
             } else if (front && !right) {
@@ -480,10 +527,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                                 >
                                     <Image
                                         source={{ uri: next.right }}
-                                        style={{
-                                            height: '100%',
-                                            width: '100%',
-                                        }}
+                                        style={getBookImageStyle(true, false)}
                                     />
                                 </View>
                             )}

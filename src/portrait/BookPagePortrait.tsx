@@ -266,7 +266,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
                             <View style={{ height: '100%', width: '100%' }}>
                                 <Image
                                     source={{ uri: current.right }}
-                                    style={{ height: '100%', width: '100%' }}
+                                    style={getBookImageStyle(true, true)}
                                 />
                             </View>
                         )}
@@ -413,12 +413,7 @@ const IPage: React.FC<IPageProps> = ({
                     source={{
                         uri: page.left,
                     }}
-                    style={[
-                        frontImageStyle,
-                        {
-                            left: 0,
-                        },
-                    ]}
+                    style={[frontImageStyle]}
                 />
             </Animated.View>
         </View>

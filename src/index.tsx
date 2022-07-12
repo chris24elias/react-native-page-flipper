@@ -35,6 +35,7 @@ export type PageFlipperInstance = {
     goToPage: (index: number) => void;
     previousPage: () => void;
     nextPage: () => void;
+    getContainerSize: () => Size;
 };
 
 type State = {
@@ -149,6 +150,59 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             goToPage(newIndex);
         }, [goToPage, state.pageIndex]);
 
+        const getContainerSize = useCallback(() => {
+            let size = {
+                height: state.realImageSize.height,
+                width:
+                    singleImageMode && !state.isPortrait
+                        ? state.realImageSize.width * 2
+                        : state.realImageSize.width,
+            };
+
+            if (!singleImageMode && state.isPortrait) {
+                size = {
+                    height: state.realImageSize.height,
+                    width: state.realImageSize.width / 2,
+                };
+            }
+
+            let containerSize: Size;
+
+            if (size.height > size.width) {
+                const ratio = size.height / size.width;
+                containerSize = {
+                    height: width * ratio,
+                    width,
+                };
+
+                if (containerSize.height > height) {
+                    const diff = containerSize.height / height;
+                    containerSize.height = height;
+                    containerSize.width = containerSize.width / diff;
+                }
+            } else {
+                const ratio = size.width / size.height;
+                containerSize = {
+                    height,
+                    width: height * ratio,
+                };
+                if (containerSize.width > width) {
+                    const diff = containerSize.width / width;
+                    containerSize.width = width;
+                    containerSize.height = containerSize.height / diff;
+                }
+            }
+
+            return containerSize;
+        }, [
+            height,
+            singleImageMode,
+            state.isPortrait,
+            state.realImageSize.width,
+            state.realImageSize.height,
+            width,
+        ]);
+
         useEffect(() => {
             if (state.nextPageIndex !== undefined) {
                 if (!state.isPortrait) {
@@ -171,8 +225,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                 goToPage,
                 nextPage,
                 previousPage,
+                getContainerSize,
             }),
-            [goToPage, nextPage, previousPage]
+            [goToPage, nextPage, previousPage, getContainerSize]
         );
 
         const initialize = async () => {
@@ -272,52 +327,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         const onLayout = (e: LayoutChangeEvent) => {
             const { height, width } = e.nativeEvent.layout;
             setLayout({ height, width });
-        };
-
-        const getContainerSize = () => {
-            let size = {
-                height: state.realImageSize.height,
-                width:
-                    singleImageMode && !state.isPortrait
-                        ? state.realImageSize.width * 2
-                        : state.realImageSize.width,
-            };
-
-            if (!singleImageMode && state.isPortrait) {
-                size = {
-                    height: state.realImageSize.height,
-                    width: state.realImageSize.width / 2,
-                };
-            }
-
-            let containerSize: Size;
-
-            if (size.height > size.width) {
-                const ratio = size.height / size.width;
-                containerSize = {
-                    height: width * ratio,
-                    width,
-                };
-
-                if (containerSize.height > height) {
-                    const diff = containerSize.height / height;
-                    containerSize.height = height;
-                    containerSize.width = containerSize.width / diff;
-                }
-            } else {
-                const ratio = size.width / size.height;
-                containerSize = {
-                    height,
-                    width: height * ratio,
-                };
-                if (containerSize.width > width) {
-                    const diff = containerSize.width / width;
-                    containerSize.width = width;
-                    containerSize.height = containerSize.height / diff;
-                }
-            }
-
-            return containerSize;
         };
 
         const onPageFlipped = (index: number) => {

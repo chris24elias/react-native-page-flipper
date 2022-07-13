@@ -1,4 +1,4 @@
-import { PageFlipper, PageFlipperInstance } from 'react-native-page-flipper';
+import PageFlipper, { PageFlipperInstance } from 'react-native-page-flipper';
 import { RootStackScreenProps } from '@/types';
 import { IS_WEB } from '@/utils/Constants';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';
@@ -31,7 +31,7 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const [isPortrait, setIsPortrait] = React.useState(true);
   const [isSingle, setIsSingle] = React.useState(true);
   const [pressable, setPressable] = React.useState(true);
-  const data = DOUBLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
+  const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
 
   return (
     <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">

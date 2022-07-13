@@ -32,7 +32,7 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const [isSingle, setIsSingle] = React.useState(true);
   const [pressable, setPressable] = React.useState(true);
   const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
-
+  const [size, setSize] = React.useState({});
   return (
     <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
       <PageFlipper
@@ -47,7 +47,10 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         onPageDragStart={() => console.log('page drag start')}
         onPageDragEnd={() => console.log('page drag end')}
         pressable={pressable}
-        onContainerSizeChange={(size) => console.log('CONTAINER SIZE CHANGE', size)}
+        onContainerSizeChange={(size) => {
+          console.log('CONTAINER SIZE CHANGE', size);
+          setSize(size);
+        }}
       />
 
       <Box

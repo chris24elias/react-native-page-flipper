@@ -1,7 +1,57 @@
 import { Image } from 'react-native';
 import { runOnJS } from 'react-native-reanimated';
-import type { Size } from '../types';
+import type { Page, Size } from '../types';
 import type { TransformsStyle } from 'react-native';
+
+export const createPages = ({
+    portrait,
+    singleImageMode,
+    data,
+}: {
+    portrait: boolean;
+    singleImageMode: boolean;
+    data: string[];
+}) => {
+    const allPages: Page[] = [];
+
+    if (portrait) {
+        if (!singleImageMode) {
+            data.forEach((page) => {
+                allPages.push({
+                    left: page,
+                    right: page,
+                });
+                allPages.push({
+                    left: page,
+                    right: page,
+                });
+            });
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                allPages[i] = {
+                    left: data[i],
+                    right: data[i],
+                };
+            }
+        }
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            if (singleImageMode) {
+                allPages.push({
+                    left: data[i],
+                    right: data[i + 1],
+                });
+                i++;
+            } else {
+                allPages.push({
+                    left: data[i],
+                    right: data[i],
+                });
+            }
+        }
+    }
+    return allPages;
+};
 
 export const getImageSize = (uri: string): Promise<Size> =>
     new Promise((resolve, reject) =>

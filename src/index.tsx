@@ -1,13 +1,13 @@
 import usePrevious from './hooks/usePrevious';
 import useSetState from './hooks/useSetState';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRef } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import type { BookPageInstance } from './BookPage';
 import type { PortraitBookInstance } from './portrait/BookPagePortrait';
 import type { Page, Size } from './types';
 import cacheImages from './utils/cacheImages';
-import { getImageSize } from './utils/utils';
+import { createPages, getImageSize } from './utils/utils';
 import Viewer from './Viewer';
 
 export type IPageFlipperProps = {
@@ -31,7 +31,6 @@ export type PageFlipperInstance = {
     goToPage: (index: number) => void;
     previousPage: () => void;
     nextPage: () => void;
-    getContainerSize: () => Size;
 };
 
 export type State = {
@@ -75,8 +74,10 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         },
         ref
     ) => {
-        const [layout, setLayout] = useState({ height: 0, width: 0 });
-        const { width, height } = layout;
+        const [{ width, height }, setLayout] = useState({
+            height: 0,
+            width: 0,
+        });
         const [state, setState] = useSetState<State>({
             pageIndex: 0,
             pages: [],
@@ -94,6 +95,130 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         const nextBookPage = useRef<BookPageInstance>(null);
         const portraitBookPage = useRef<PortraitBookInstance>(null);
         const previousPortrait = usePrevious(portrait);
+        const containerSize = useMemo(() => {
+            if (!state.initialized) {
+                return {
+                    width: 0,
+                    height: 0,
+                };
+            }
+            let size = {
+                height: state.realImageSize.height,
+                width:
+                    singleImageMode && !state.isPortrait
+                        ? state.realImageSize.width * 2
+                        : state.realImageSize.width,
+            };
+
+            if (!singleImageMode && state.isPortrait) {
+                size = {
+                    height: state.realImageSize.height,
+                    width: state.realImageSize.width / 2,
+                };
+            }
+
+            let finalSize: Size;
+
+            // corrections
+            if (size.height > size.width) {
+                const ratio = size.height / size.width;
+                finalSize = {
+                    height: width * ratio,
+                    width,
+                };
+
+                if (finalSize.height > height) {
+                    const diff = finalSize.height / height;
+                    finalSize.height = height;
+                    finalSize.width = finalSize.width / diff;
+                }
+            } else {
+                const ratio = size.width / size.height;
+                finalSize = {
+                    height,
+                    width: height * ratio,
+                };
+                if (finalSize.width > width) {
+                    const diff = finalSize.width / width;
+                    finalSize.width = width;
+                    finalSize.height = finalSize.height / diff;
+                }
+            }
+
+            return finalSize;
+        }, [
+            height,
+            singleImageMode,
+            width,
+            state.initialized,
+            state.isPortrait,
+            state.realImageSize.height,
+            state.realImageSize.width,
+        ]);
+
+        useEffect(() => {
+            if (state.initialized && onContainerSizeChange) {
+                onContainerSizeChange(containerSize);
+            }
+            // eslint-disable-next-line
+        }, [containerSize, state.initialized]);
+
+        useEffect(() => {
+            const initialize = async () => {
+                try {
+                    const allPages = createPages({
+                        portrait,
+                        singleImageMode,
+                        data,
+                    });
+
+                    cacheImages(data.map((uri) => ({ uri })));
+
+                    const realImageSize = await getImageSize(data[0]);
+
+                    let adjustedIndex = getAdjustedIndex(allPages);
+
+                    setState({
+                        initialized: true,
+                        pages: allPages,
+                        realImageSize,
+                        prev: allPages[adjustedIndex - 1],
+                        current: allPages[adjustedIndex],
+                        next: allPages[adjustedIndex + 1],
+                        pageIndex: adjustedIndex,
+                        isPortrait: portrait,
+                    });
+
+                    if (onInitialized) {
+                        onInitialized({
+                            pages: allPages,
+                            index: adjustedIndex,
+                        });
+                    }
+                } catch (error) {
+                    console.error('error', error);
+                }
+            };
+            initialize();
+            // eslint-disable-next-line
+        }, [data, portrait, singleImageMode]);
+
+        useEffect(() => {
+            if (state.nextPageIndex !== undefined) {
+                if (!state.isPortrait) {
+                    if (state.nextPageIndex > state.pageIndex) {
+                        nextBookPage.current?.turnPage();
+                    } else {
+                        prevBookPage.current?.turnPage();
+                    }
+                } else {
+                    portraitBookPage.current?.turnPage(
+                        state.nextPageIndex > state.pageIndex ? 1 : -1
+                    );
+                }
+            }
+            // eslint-disable-next-line
+        }, [state.nextPageIndex]);
 
         const goToPage = useCallback(
             (index: number) => {
@@ -147,161 +272,15 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             goToPage(newIndex);
         }, [goToPage, state.pageIndex]);
 
-        const getContainerSize = useCallback(() => {
-            if (!state.initialized) {
-                return {
-                    width: 0,
-                    height: 0,
-                };
-            }
-            let size = {
-                height: state.realImageSize.height,
-                width:
-                    singleImageMode && !state.isPortrait
-                        ? state.realImageSize.width * 2
-                        : state.realImageSize.width,
-            };
-
-            if (!singleImageMode && state.isPortrait) {
-                size = {
-                    height: state.realImageSize.height,
-                    width: state.realImageSize.width / 2,
-                };
-            }
-
-            let containerSize: Size;
-
-            if (size.height > size.width) {
-                const ratio = size.height / size.width;
-                containerSize = {
-                    height: width * ratio,
-                    width,
-                };
-
-                if (containerSize.height > height) {
-                    const diff = containerSize.height / height;
-                    containerSize.height = height;
-                    containerSize.width = containerSize.width / diff;
-                }
-            } else {
-                const ratio = size.width / size.height;
-                containerSize = {
-                    height,
-                    width: height * ratio,
-                };
-                if (containerSize.width > width) {
-                    const diff = containerSize.width / width;
-                    containerSize.width = width;
-                    containerSize.height = containerSize.height / diff;
-                }
-            }
-
-            return containerSize;
-        }, [
-            height,
-            singleImageMode,
-            state.isPortrait,
-            state.realImageSize.width,
-            state.realImageSize.height,
-            width,
-            state.initialized,
-        ]);
-
-        useEffect(() => {
-            if (state.nextPageIndex !== undefined) {
-                if (!state.isPortrait) {
-                    if (state.nextPageIndex > state.pageIndex) {
-                        nextBookPage.current?.turnPage();
-                    } else {
-                        prevBookPage.current?.turnPage();
-                    }
-                } else {
-                    portraitBookPage.current?.turnPage(
-                        state.nextPageIndex > state.pageIndex ? 1 : -1
-                    );
-                }
-            }
-        }, [state.nextPageIndex]);
-
         React.useImperativeHandle(
             ref,
             () => ({
                 goToPage,
                 nextPage,
                 previousPage,
-                getContainerSize,
             }),
-            [goToPage, nextPage, previousPage, getContainerSize]
+            [goToPage, nextPage, previousPage]
         );
-
-        const initialize = async () => {
-            try {
-                const allPages: Page[] = [];
-
-                if (portrait) {
-                    if (!singleImageMode) {
-                        data.forEach((page) => {
-                            allPages.push({
-                                left: page,
-                                right: page,
-                            });
-                            allPages.push({
-                                left: page,
-                                right: page,
-                            });
-                        });
-                    } else {
-                        for (let i = 0; i < data.length; i++) {
-                            allPages[i] = {
-                                left: data[i],
-                                right: data[i],
-                            };
-                        }
-                    }
-                } else {
-                    for (let i = 0; i < data.length; i++) {
-                        if (singleImageMode) {
-                            allPages.push({
-                                left: data[i],
-                                right: data[i + 1],
-                            });
-                            i++;
-                        } else {
-                            allPages.push({
-                                left: data[i],
-                                right: data[i],
-                            });
-                        }
-                    }
-                }
-
-                cacheImages(data.map((uri) => ({ uri })));
-
-                const realImageSize = await getImageSize(data[0]);
-
-                let adjustedIndex = getAdjustedIndex(allPages);
-
-                const prev = allPages[adjustedIndex - 1];
-                const current = allPages[adjustedIndex];
-                const next = allPages[adjustedIndex + 1];
-
-                setState({
-                    initialized: true,
-                    pages: allPages,
-                    realImageSize,
-                    prev,
-                    current,
-                    next,
-                    pageIndex: adjustedIndex,
-                    isPortrait: portrait,
-                });
-
-                onInitialized &&
-                    onInitialized({ pages: allPages, index: adjustedIndex });
-            } catch (error) {
-                console.error('error', error);
-            }
-        };
 
         const getAdjustedIndex = (allPages: any[]) => {
             // THIS NEEDS REWORKING
@@ -329,14 +308,12 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             return adjustedIndex;
         };
 
-        useEffect(() => {
-            initialize();
-        }, [data, portrait, singleImageMode]);
-
-        const onLayout = useCallback((e: LayoutChangeEvent) => {
-            const { height, width } = e.nativeEvent.layout;
-            setLayout({ height, width });
-        }, []);
+        const onLayout = (e: LayoutChangeEvent) => {
+            setLayout({
+                height: e.nativeEvent.layout.height,
+                width: e.nativeEvent.layout.width,
+            });
+        };
 
         const onPageFlipped = useCallback(
             (index: number) => {
@@ -373,8 +350,8 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                     onFlippedEnd(newIndex);
                 }
 
-                if (newIndex === state.pages.length - 1) {
-                    onEndReached && onEndReached();
+                if (newIndex === state.pages.length - 1 && onEndReached) {
+                    onEndReached();
                 }
             },
             [
@@ -397,35 +374,41 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             [setState]
         );
 
-        if (!state.initialized) {
-            return null;
-        }
-
         return (
-            <Viewer
-                {...{
-                    state,
-                    enabled,
-                    getContainerSize,
-                    isAnimatingRef,
-                    nextBookPage,
-                    onContainerSizeChange,
-                    onFlipStart,
-                    onLayout,
-                    onPageDrag,
-                    onPageDragEnd,
-                    onPageDragStart,
-                    onPageFlipped,
-                    portraitBookPage,
-                    pressable,
-                    prevBookPage,
-                    setIsAnimating,
-                    singleImageMode,
-                    renderLastPage,
-                }}
-            />
+            <View style={styles.container} onLayout={onLayout}>
+                {state.initialized && (
+                    <Viewer
+                        {...{
+                            state,
+                            enabled,
+                            isAnimatingRef,
+                            nextBookPage,
+                            containerSize,
+                            onFlipStart,
+                            onPageDrag,
+                            onPageDragEnd,
+                            onPageDragStart,
+                            onPageFlipped,
+                            portraitBookPage,
+                            pressable,
+                            prevBookPage,
+                            setIsAnimating,
+                            singleImageMode,
+                            renderLastPage,
+                        }}
+                    />
+                )}
+            </View>
         );
     }
 );
 
 export default React.memo(PageFlipper);
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});

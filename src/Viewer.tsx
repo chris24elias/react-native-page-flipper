@@ -1,27 +1,25 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { State } from 'src';
 import { BookPage, IBookPageProps } from './BookPage';
 import { BookPageBackground } from './BookPageBackground';
 import Image from './Components/Image';
-// import useWhyDidYouUpdate from './hooks/useWhyDidYouUpdate';
 import { BookPagePortrait } from './portrait/BookPagePortrait';
+import type { Size } from './types';
 
 export type IViewerProps = {
     state: State;
     singleImageMode: boolean;
     enabled: boolean;
     pressable: boolean;
+    containerSize: Size;
     // fix
     renderLastPage: any;
-    onLayout: any;
     isAnimatingRef: any;
     prevBookPage: any;
     nextBookPage: any;
     portraitBookPage: any;
     setIsAnimating: any;
-    onContainerSizeChange: any;
-    getContainerSize: any;
     onPageFlipped: any;
     onFlipStart: any;
     onPageDrag: any;
@@ -29,40 +27,30 @@ export type IViewerProps = {
     onPageDragStart: any;
 };
 
-const Viewer: React.FC<IViewerProps> = (props) => {
-    // useWhyDidYouUpdate('VIEWER', props);
-    const {
-        singleImageMode,
-        enabled,
-        setIsAnimating,
-        isAnimatingRef,
-        onPageFlipped,
-        onFlipStart,
-        onPageDrag,
-        onPageDragEnd,
-        onPageDragStart,
-        pressable,
-        onLayout,
-        prevBookPage,
-        nextBookPage,
-        portraitBookPage,
-        onContainerSizeChange,
-        getContainerSize,
-        renderLastPage,
-        state,
-    } = props;
-
+const Viewer: React.FC<IViewerProps> = ({
+    singleImageMode,
+    enabled,
+    setIsAnimating,
+    isAnimatingRef,
+    onPageFlipped,
+    onFlipStart,
+    onPageDrag,
+    onPageDragEnd,
+    onPageDragStart,
+    pressable,
+    prevBookPage,
+    nextBookPage,
+    portraitBookPage,
+    containerSize,
+    renderLastPage,
+    state,
+}) => {
     const { current, pageIndex, pages, next, prev, isPortrait, isAnimating } =
         state;
-    const containerSize = useMemo(() => getContainerSize(), [getContainerSize]);
     const isFirstPage = pageIndex === 0;
     const isLastPage = pageIndex === pages.length - 1;
     const shouldRenderLastPage =
         isLastPage && singleImageMode && pages.length % 2 !== 0;
-
-    useEffect(() => {
-        onContainerSizeChange && onContainerSizeChange(containerSize);
-    }, [containerSize, onContainerSizeChange]);
 
     const getLastPage = () => {
         if (renderLastPage) {
@@ -142,85 +130,83 @@ const Viewer: React.FC<IViewerProps> = (props) => {
         isPressable: pressable,
     };
     return (
-        <View style={styles.container} onLayout={onLayout}>
-            <View
-                style={[
-                    styles.contentContainer,
-                    {
-                        height: containerSize.height,
-                        width: containerSize.width,
-                    },
-                ]}
-            >
-                {!isPortrait ? (
-                    <View style={styles.content}>
-                        {!prev ? (
+        <View
+            style={[
+                styles.contentContainer,
+                {
+                    height: containerSize.height,
+                    width: containerSize.width,
+                },
+            ]}
+        >
+            {!isPortrait ? (
+                <View style={styles.content}>
+                    {!prev ? (
+                        <Empty />
+                    ) : (
+                        <BookPage
+                            ref={prevBookPage}
+                            right={false}
+                            front={current}
+                            back={prev}
+                            key={`left${pageIndex}`}
+                            {...bookPageProps}
+                        />
+                    )}
+                    {!next ? (
+                        shouldRenderLastPage ? (
+                            getLastPage()
+                        ) : (
                             <Empty />
-                        ) : (
-                            <BookPage
-                                ref={prevBookPage}
-                                right={false}
-                                front={current}
-                                back={prev}
-                                key={`left${pageIndex}`}
-                                {...bookPageProps}
-                            />
-                        )}
-                        {!next ? (
-                            shouldRenderLastPage ? (
-                                getLastPage()
-                            ) : (
-                                <Empty />
-                            )
-                        ) : (
-                            <BookPage
-                                ref={nextBookPage}
-                                right
-                                front={current}
-                                back={next}
-                                key={`right${pageIndex}`}
-                                {...bookPageProps}
-                            />
-                        )}
-                        <BookPageBackground
-                            left={!prev ? current.left : prev.left}
-                            right={!next ? current.right : next.right}
-                            isFirstPage={isFirstPage}
-                            isLastPage={isLastPage}
-                            getBookImageStyle={getBookImageStyle}
-                            containerSize={containerSize}
+                        )
+                    ) : (
+                        <BookPage
+                            ref={nextBookPage}
+                            right
+                            front={current}
+                            back={next}
+                            key={`right${pageIndex}`}
+                            {...bookPageProps}
+                        />
+                    )}
+                    <BookPageBackground
+                        left={!prev ? current.left : prev.left}
+                        right={!next ? current.right : next.right}
+                        isFirstPage={isFirstPage}
+                        isLastPage={isLastPage}
+                        getBookImageStyle={getBookImageStyle}
+                        containerSize={containerSize}
+                    />
+                </View>
+            ) : (
+                <View style={{ flex: 1, overflow: 'hidden' }}>
+                    <View style={{ ...StyleSheet.absoluteFillObject }}>
+                        <BookPagePortrait
+                            {...bookPageProps}
+                            current={current}
+                            prev={prev}
+                            next={next}
+                            onPageFlip={onPageFlipped}
+                            key={`right${pageIndex}`}
+                            ref={portraitBookPage}
                         />
                     </View>
-                ) : (
-                    <View style={{ flex: 1, overflow: 'hidden' }}>
-                        <View style={{ ...StyleSheet.absoluteFillObject }}>
-                            <BookPagePortrait
-                                {...bookPageProps}
-                                current={current}
-                                prev={prev}
-                                next={next}
-                                onPageFlip={onPageFlipped}
-                                key={`right${pageIndex}`}
-                                ref={portraitBookPage}
+                    {next && (
+                        <View
+                            style={{
+                                ...StyleSheet.absoluteFillObject,
+                                zIndex: -5,
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <Image
+                                source={{ uri: next.right }}
+                                style={getBookImageStyle(true, false)}
                             />
                         </View>
-                        {next && (
-                            <View
-                                style={{
-                                    ...StyleSheet.absoluteFillObject,
-                                    zIndex: -5,
-                                    overflow: 'hidden',
-                                }}
-                            >
-                                <Image
-                                    source={{ uri: next.right }}
-                                    style={getBookImageStyle(true, false)}
-                                />
-                            </View>
-                        )}
-                    </View>
-                )}
-            </View>
+                    )}
+                </View>
+            )}
         </View>
     );
 };

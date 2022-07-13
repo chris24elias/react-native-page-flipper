@@ -47,6 +47,7 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         onPageDragStart={() => console.log('page drag start')}
         onPageDragEnd={() => console.log('page drag end')}
         pressable={pressable}
+        onContainerSizeChange={(size) => console.log('CONTAINER SIZE CHANGE', size)}
       />
 
       <Box

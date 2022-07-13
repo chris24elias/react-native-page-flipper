@@ -1,6 +1,6 @@
 import usePrevious from './hooks/usePrevious';
 import useSetState from './hooks/useSetState';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRef } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
@@ -29,6 +29,7 @@ export type IPageFlipperProps = {
     onPageDragEnd?: () => void;
     onEndReached?: () => void;
     onInitialized?: (props: any) => void;
+    onContainerSizeChange?: (containerSize: Size) => void;
 };
 
 export type PageFlipperInstance = {
@@ -53,6 +54,12 @@ type State = {
 
 const debug = true;
 
+const logger = (msg: string) => {
+    if (debug) {
+        console.log(msg);
+    }
+};
+
 const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
     (
         {
@@ -69,6 +76,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             onPageDragStart,
             onEndReached,
             onInitialized,
+            onContainerSizeChange,
         },
         ref
     ) => {
@@ -91,12 +99,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         const nextBookPage = useRef<BookPageInstance>(null);
         const portraitBookPage = useRef<PortraitBookInstance>(null);
         const previousPortrait = usePrevious(portrait);
-
-        const logger = (msg: string) => {
-            if (debug) {
-                console.log(msg);
-            }
-        };
 
         const goToPage = useCallback(
             (index: number) => {
@@ -151,6 +153,12 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         }, [goToPage, state.pageIndex]);
 
         const getContainerSize = useCallback(() => {
+            if (!state.initialized) {
+                return {
+                    width: 0,
+                    height: 0,
+                };
+            }
             let size = {
                 height: state.realImageSize.height,
                 width:
@@ -201,6 +209,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             state.realImageSize.width,
             state.realImageSize.height,
             width,
+            state.initialized,
         ]);
 
         useEffect(() => {
@@ -437,8 +446,11 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             return imageStyle;
         };
 
-        const containerSize = getContainerSize();
-
+        const containerSize = useMemo(() => {
+            const size = getContainerSize();
+            onContainerSizeChange && onContainerSizeChange(size);
+            return size;
+        }, [getContainerSize, onContainerSizeChange]);
         const { pageIndex, pages, prev, current, next } = state;
 
         const isFirstPage = pageIndex === 0;

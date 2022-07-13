@@ -1,18 +1,14 @@
 import usePrevious from './hooks/usePrevious';
 import useSetState from './hooks/useSetState';
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRef } from 'react';
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
-import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
-import { BookPageBackground } from './BookPageBackground';
-import Image from './Components/Image';
-import {
-    BookPagePortrait,
-    PortraitBookInstance,
-} from './portrait/BookPagePortrait';
+import type { LayoutChangeEvent } from 'react-native';
+import type { BookPageInstance } from './BookPage';
+import type { PortraitBookInstance } from './portrait/BookPagePortrait';
 import type { Page, Size } from './types';
 import cacheImages from './utils/cacheImages';
 import { getImageSize } from './utils/utils';
+import Viewer from './Viewer';
 
 export type IPageFlipperProps = {
     data: string[];
@@ -23,7 +19,6 @@ export type IPageFlipperProps = {
     portrait?: boolean;
     onFlippedEnd?: (index: number) => void;
     onFlipStart?: (id: number) => void;
-
     onPageDragStart?: () => void;
     onPageDrag?: () => void;
     onPageDragEnd?: () => void;
@@ -39,7 +34,7 @@ export type PageFlipperInstance = {
     getContainerSize: () => Size;
 };
 
-type State = {
+export type State = {
     pageIndex: number;
     pages: Page[];
     isAnimating: boolean;
@@ -284,28 +279,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
                 const realImageSize = await getImageSize(data[0]);
 
-                // this is not 100% yet, still has some edge cases where it fails
-                let adjustedIndex = state.pageIndex;
-                if (
-                    previousPortrait !== undefined &&
-                    previousPortrait !== portrait &&
-                    singleImageMode
-                ) {
-                    if (portrait) {
-                        adjustedIndex *= 2;
-                    } else {
-                        adjustedIndex = Math.floor(
-                            adjustedIndex % 2 === 0
-                                ? adjustedIndex / 2
-                                : (adjustedIndex - 1) / 2
-                        );
-                    }
-                }
-
-                if (adjustedIndex < 0 || adjustedIndex > allPages.length - 1) {
-                    // invalid index, reset to 0
-                    adjustedIndex = 0;
-                }
+                let adjustedIndex = getAdjustedIndex(allPages);
 
                 const prev = allPages[adjustedIndex - 1];
                 const current = allPages[adjustedIndex];
@@ -329,266 +303,129 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             }
         };
 
+        const getAdjustedIndex = (allPages: any[]) => {
+            // THIS NEEDS REWORKING
+            let adjustedIndex = state.pageIndex;
+            if (
+                previousPortrait !== undefined &&
+                previousPortrait !== portrait &&
+                singleImageMode
+            ) {
+                if (portrait) {
+                    adjustedIndex *= 2;
+                } else {
+                    adjustedIndex = Math.floor(
+                        adjustedIndex % 2 === 0
+                            ? adjustedIndex / 2
+                            : (adjustedIndex - 1) / 2
+                    );
+                }
+            }
+
+            if (adjustedIndex < 0 || adjustedIndex > allPages.length - 1) {
+                // invalid index, reset to 0
+                adjustedIndex = 0;
+            }
+            return adjustedIndex;
+        };
+
         useEffect(() => {
             initialize();
         }, [data, portrait, singleImageMode]);
 
-        const onLayout = (e: LayoutChangeEvent) => {
+        const onLayout = useCallback((e: LayoutChangeEvent) => {
             const { height, width } = e.nativeEvent.layout;
             setLayout({ height, width });
-        };
+        }, []);
 
-        const onPageFlipped = (index: number) => {
-            const newIndex =
-                state.nextPageIndex !== undefined
-                    ? state.nextPageIndex
-                    : pageIndex + index;
+        const onPageFlipped = useCallback(
+            (index: number) => {
+                const newIndex =
+                    state.nextPageIndex !== undefined
+                        ? state.nextPageIndex
+                        : state.pageIndex + index;
 
-            if (newIndex < 0 || newIndex > state.pages.length - 1) {
-                // this if condition theoretically should never occur in the first place, so it could be removed but it's here just in case
-                logger('invalid page');
+                if (newIndex < 0 || newIndex > state.pages.length - 1) {
+                    // this if condition theoretically should never occur in the first place, so it could be removed but it's here just in case
+                    logger('invalid page');
 
+                    setState({
+                        isAnimating: false,
+                        nextPageIndex: undefined,
+                    });
+                    isAnimatingRef.current = false;
+                    return;
+                }
+
+                const prev = state.pages[newIndex - 1];
+                const current = state.pages[newIndex];
+                const next = state.pages[newIndex + 1];
                 setState({
+                    pageIndex: newIndex,
                     isAnimating: false,
+                    prev,
+                    current,
+                    next,
                     nextPageIndex: undefined,
                 });
                 isAnimatingRef.current = false;
-                return;
-            }
-
-            const prev = state.pages[newIndex - 1];
-            const current = state.pages[newIndex];
-            const next = state.pages[newIndex + 1];
-            setState({
-                pageIndex: newIndex,
-                isAnimating: false,
-                prev,
-                current,
-                next,
-                nextPageIndex: undefined,
-            });
-            isAnimatingRef.current = false;
-            if (onFlippedEnd && typeof onFlippedEnd === 'function') {
-                onFlippedEnd(newIndex);
-            }
-
-            if (newIndex === state.pages.length - 1) {
-                onEndReached && onEndReached();
-            }
-        };
-
-        const setIsAnimating = (val: boolean) => {
-            setState({
-                isAnimating: val,
-            });
-            isAnimatingRef.current = val;
-        };
-
-        const getLastPage = () => {
-            if (renderLastPage) {
-                return renderLastPage();
-            }
-
-            return (
-                <View style={styles.container}>
-                    <Text>last page</Text>
-                </View>
-            );
-        };
-
-        const getBookImageStyle = (right: boolean, front: boolean) => {
-            if (!singleImageMode && state.isPortrait) {
-                const imageStyle: any = {
-                    height: containerSize.height,
-                    width: containerSize.width * 2,
-                    position: 'absolute',
-                };
-
-                const isEvenPage = state.pageIndex % 2 === 0;
-
-                if (front) {
-                    if (isEvenPage) {
-                        imageStyle.left = right ? 0 : -containerSize.width;
-                    } else {
-                        imageStyle.left = right ? -containerSize.width : 0;
-                    }
-                } else {
-                    if (isEvenPage) {
-                        imageStyle.left = right ? -containerSize.width : 0;
-                    } else {
-                        imageStyle.left = right ? 0 : -containerSize.width;
-                    }
+                if (onFlippedEnd && typeof onFlippedEnd === 'function') {
+                    onFlippedEnd(newIndex);
                 }
-                return imageStyle;
-            }
 
-            const imageStyle: any = {
-                height: containerSize.height,
-                width:
-                    singleImageMode && !state.isPortrait
-                        ? containerSize.width / 2
-                        : containerSize.width,
-                position: 'absolute',
-            };
+                if (newIndex === state.pages.length - 1) {
+                    onEndReached && onEndReached();
+                }
+            },
+            [
+                onEndReached,
+                onFlippedEnd,
+                setState,
+                state.nextPageIndex,
+                state.pageIndex,
+                state.pages,
+            ]
+        );
 
-            const offset = singleImageMode ? 0 : -containerSize.width / 2;
-
-            if (state.isPortrait && front) {
-                imageStyle.left = 0;
-            } else if ((front && right) || (!front && right)) {
-                // front right or back right
-                imageStyle.left = offset;
-            } else if (front && !right) {
-                // front left
-                imageStyle.right = offset;
-            }
-
-            return imageStyle;
-        };
-
-        const containerSize = useMemo(() => {
-            const size = getContainerSize();
-            onContainerSizeChange && onContainerSizeChange(size);
-            return size;
-        }, [getContainerSize, onContainerSizeChange]);
-        const { pageIndex, pages, prev, current, next } = state;
-
-        const isFirstPage = pageIndex === 0;
-        const isLastPage = pageIndex === pages.length - 1;
-        const shouldRenderLastPage =
-            isLastPage && singleImageMode && data.length % 2 !== 0;
-
-        const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> =
-            {
-                containerSize: containerSize,
-                isAnimating: state.isAnimating,
-                enabled,
-                setIsAnimating: setIsAnimating,
-                isAnimatingRef: isAnimatingRef,
-                onPageFlip: onPageFlipped,
-                getBookImageStyle,
-                single: singleImageMode,
-                onFlipStart,
-                onPageDrag,
-                onPageDragEnd,
-                onPageDragStart,
-                isPressable: pressable,
-            };
+        const setIsAnimating = useCallback(
+            (val: boolean) => {
+                setState({
+                    isAnimating: val,
+                });
+                isAnimatingRef.current = val;
+            },
+            [setState]
+        );
 
         if (!state.initialized) {
             return null;
         }
 
         return (
-            <View style={styles.container} onLayout={onLayout}>
-                <View
-                    style={[
-                        styles.contentContainer,
-                        {
-                            height: containerSize.height,
-                            width: containerSize.width,
-                        },
-                    ]}
-                >
-                    {!state.isPortrait ? (
-                        <View style={styles.content}>
-                            {!prev ? (
-                                <Empty />
-                            ) : (
-                                <BookPage
-                                    ref={prevBookPage}
-                                    right={false}
-                                    front={current}
-                                    back={prev}
-                                    key={`left${pageIndex}`}
-                                    {...bookPageProps}
-                                />
-                            )}
-                            {!next ? (
-                                shouldRenderLastPage ? (
-                                    getLastPage()
-                                ) : (
-                                    <Empty />
-                                )
-                            ) : (
-                                <BookPage
-                                    ref={nextBookPage}
-                                    right
-                                    front={current}
-                                    back={next}
-                                    key={`right${pageIndex}`}
-                                    {...bookPageProps}
-                                />
-                            )}
-                            <BookPageBackground
-                                left={!prev ? current.left : prev.left}
-                                right={!next ? current.right : next.right}
-                                isFirstPage={isFirstPage}
-                                isLastPage={isLastPage}
-                                getBookImageStyle={getBookImageStyle}
-                                containerSize={containerSize}
-                            />
-                        </View>
-                    ) : (
-                        <View style={{ flex: 1, overflow: 'hidden' }}>
-                            <View style={{ ...StyleSheet.absoluteFillObject }}>
-                                <BookPagePortrait
-                                    {...bookPageProps}
-                                    current={current}
-                                    prev={prev}
-                                    next={next}
-                                    onPageFlip={onPageFlipped}
-                                    key={`right${pageIndex}`}
-                                    ref={portraitBookPage}
-                                />
-                            </View>
-                            {next && (
-                                <View
-                                    style={{
-                                        ...StyleSheet.absoluteFillObject,
-                                        zIndex: -5,
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    <Image
-                                        source={{ uri: next.right }}
-                                        style={getBookImageStyle(true, false)}
-                                    />
-                                </View>
-                            )}
-                        </View>
-                    )}
-                </View>
-            </View>
+            <Viewer
+                {...{
+                    state,
+                    enabled,
+                    getContainerSize,
+                    isAnimatingRef,
+                    nextBookPage,
+                    onContainerSizeChange,
+                    onFlipStart,
+                    onLayout,
+                    onPageDrag,
+                    onPageDragEnd,
+                    onPageDragStart,
+                    onPageFlipped,
+                    portraitBookPage,
+                    pressable,
+                    prevBookPage,
+                    setIsAnimating,
+                    singleImageMode,
+                    renderLastPage,
+                }}
+            />
         );
     }
 );
 
 export default React.memo(PageFlipper);
-
-const Empty = () => <View style={styles.container} />;
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    contentContainer: {
-        flexDirection: 'row',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        backgroundColor: 'white',
-    },
-    content: {
-        flex: 1,
-        flexDirection: 'row',
-        overflow: 'hidden',
-    },
-});

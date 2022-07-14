@@ -3,7 +3,7 @@ import { RootStackScreenProps } from '@/types';
 import { IS_WEB } from '@/utils/Constants';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';
 import * as React from 'react';
-import { Switch } from 'react-native';
+import { Switch, View } from 'react-native';
 import Orientation from 'react-native-orientation';
 
 const SINGLE_PAGES = [
@@ -51,6 +51,9 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
           console.log('CONTAINER SIZE CHANGE', size);
           setSize(size);
         }}
+        // renderContainer={(props) => {
+        //   return <View style={{ height: '50%', width: '100%', borderWidth: 4 }} {...props} />;
+        // }}
       />
 
       <Box

@@ -234,10 +234,10 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                     return;
                 }
 
-                if (isAnimatingRef.current) {
-                    logger('is already animating');
-                    return;
-                }
+                // if (isAnimatingRef.current) {
+                //     logger('is already animating');
+                //     return;
+                // }
 
                 if (index === state.pageIndex) {
                     logger('same page');

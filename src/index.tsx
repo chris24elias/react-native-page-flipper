@@ -449,7 +449,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         const isFirstPage = pageIndex === 0;
         const isLastPage = pageIndex === pages.length - 1;
         const shouldRenderLastPage =
-            isLastPage && singleImageMode && pages.length % 2 !== 0;
+            isLastPage && singleImageMode && data.length % 2 !== 0;
 
         const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> =
             {

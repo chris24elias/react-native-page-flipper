@@ -3,7 +3,7 @@ import { RootStackScreenProps } from '@/types';
 import { IS_WEB } from '@/utils/Constants';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';
 import * as React from 'react';
-import { Switch, View } from 'react-native';
+import { Image, Switch, View } from 'react-native';
 import Orientation from 'react-native-orientation';
 
 const SINGLE_PAGES = [
@@ -34,7 +34,7 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
   const [size, setSize] = React.useState({});
   return (
-    <Box flex={1} bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
+    <Box flex={1} padding="4" bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
       <PageFlipper
         ref={pageFlipperRef}
         data={data}
@@ -51,9 +51,36 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
           console.log('CONTAINER SIZE CHANGE', size);
           setSize(size);
         }}
-        // renderContainer={(props) => {
-        //   return <View style={{ height: '50%', width: '100%', borderWidth: 4 }} {...props} />;
-        // }}
+        renderContainer={(props) => {
+          if (!isPortrait) {
+            return (
+              <Box style={{ height: '100%', width: '100%' }}>
+                <Image
+                  source={require('./bookFrame.png')}
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                    position: 'absolute',
+                    zIndex: -1,
+                    top: '2%',
+                    transform: [
+                      {
+                        scaleX: 1.05,
+                      },
+                      { scaleY: 1.11 },
+                    ],
+                  }}
+                  resizeMode="stretch"
+                  pointerEvents="none"
+                />
+
+                {props.children}
+              </Box>
+            );
+          }
+
+          return <View style={{ height: '100%', width: '100%' }} {...props} />;
+        }}
       />
 
       <Box

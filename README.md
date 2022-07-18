@@ -1,3 +1,14 @@
+### Portrait
+
+![Jul-18-2022 14-04-53](https://user-images.githubusercontent.com/40448652/179574506-b47b3c86-8ba5-4a33-a718-f451e13d53a1.gif)
+
+### Landscape 
+
+![Jul-18-2022 13-58-29](https://user-images.githubusercontent.com/40448652/179574654-818e6b5d-a7d5-47a9-99ba-022ddc555ec7.gif)
+
+### Landscape w/ singleImageMode
+![Jul-18-2022 13-59-32](https://user-images.githubusercontent.com/40448652/179574828-9d8d3766-617f-4203-be0f-480eef57df1b.gif)
+
 ### Props
 
 | Prop name       | Type              | Default value | Description                                                                                                                                                                                  |

@@ -13,6 +13,9 @@
 | onPageDragStart | Function          | undefined     | Callback for when the page has started dragging (user dragging with finger)                                                                                                                  |
 | onPageDrag      | Function          | undefined     | Callback for when the page is actively being dragged                                                                                                                                         |
 | onPageDragEnd   | Function          | undefined     | Callback for when the page has finished dragging                                                                                                                                             |
+| onInitialized   | Function          | undefined     | Callback for when the page flipper is initialized                                                                                                                                            |
+| renderContainer | Function          | undefined     | function to return an element for rendering the container of the viewer                                                                                                                      |
+| onEndReached    | Function          | undefined     | Callback for when the page flipper reaches the last page                                                                                                                                     |
 
 ### Methods
 

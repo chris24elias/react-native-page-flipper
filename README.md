@@ -32,6 +32,8 @@ The PageFlipper works on the assumption that each image (url) in the data arrary
 ## Usage
 
 ```
+import PageFlipper from 'react-native-page-flipper';
+
 const App = () => {
 
     const [index, setIndex] = useState(0);

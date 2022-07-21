@@ -1,6 +1,22 @@
 This package allows you use a cool page curl effect on your React Native apps, it works on Android, iOS, and Web.
 Check out the [demo](https://chris24elias.github.io/react-native-page-flipper/) here
 
+## Installation
+
+```sh
+yarn add react-native-page-flipper
+```
+
+In order for this package to work properly, its built using expo-linear-gradient, react-native-fast-image,react-native-gesture-handler,react-native-linear-gradient, and react-native-reanimated. So make sure you also have these installed,
+
+```sh
+yarn add expo-linear-gradient react-native-fast-image react-native-gesture-handler react-native-linear-gradient react-native-reanimated
+```
+
+Notes:
+react-native-linear-gradient is used for the shadows on iOS and Android, expo-linear-gradient is used on Web.
+The PageFlipper works on the assumption that each image (url) in the data arrary are of the same dimensions, it wont work well if you have various image sizes.
+
 ### Landscape
 
 ![Jul-18-2022 13-58-29](https://user-images.githubusercontent.com/40448652/179574654-818e6b5d-a7d5-47a9-99ba-022ddc555ec7.gif)

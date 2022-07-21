@@ -1,6 +1,5 @@
-### Portrait
-
-![Jul-18-2022 14-04-53](https://user-images.githubusercontent.com/40448652/179574506-b47b3c86-8ba5-4a33-a718-f451e13d53a1.gif)
+This package allows you use a cool page curl effect on your React Native apps, it works on Android, iOS, and Web.
+Check out the [demo](https://chris24elias.github.io/react-native-page-flipper/) here
 
 ### Landscape
 
@@ -9,6 +8,10 @@
 ### Landscape w/ singleImageMode
 
 ![Jul-18-2022 13-59-32](https://user-images.githubusercontent.com/40448652/179574828-9d8d3766-617f-4203-be0f-480eef57df1b.gif)
+
+### Portrait
+
+![Jul-18-2022 14-04-53](https://user-images.githubusercontent.com/40448652/179574506-b47b3c86-8ba5-4a33-a718-f451e13d53a1.gif)
 
 ## Usage
 

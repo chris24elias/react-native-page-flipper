@@ -1,6 +1,7 @@
 {
   "name": "expo-starter-template",
   "version": "1.0.0",
+  "homepage": "https://chris24elias.github.io/react-native-page-flipper/",
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
@@ -8,7 +9,9 @@
     "web": "expo start --web",
     "eject": "expo eject",
     "postinstall": "patch-package",
-    "lint": "eslint --color --ext .js,.jsx,.ts,.tsx src"
+    "lint": "eslint --color --ext .js,.jsx,.ts,.tsx src",
+    "deploy": "gh-pages -d web-build",
+    "predeploy": "expo build:web"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "~1.17.3",
@@ -58,6 +61,7 @@
     "eslint": "^8.15.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-cypress": "^2.12.1",
+    "gh-pages": "^4.0.0",
     "lint-staged": "^12.4.1",
     "prettier": "^2.6.2",
     "react-native-svg-transformer": "^1.0.0",

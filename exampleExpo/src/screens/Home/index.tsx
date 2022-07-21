@@ -3,6 +3,7 @@ import { RootStackScreenProps } from '@/types';
 import { IS_WEB } from '@/utils/Constants';
 import { Box, Button, Column, Input, Row, Text } from 'native-base';
 import * as React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image, Switch, View } from 'react-native';
 import Orientation from 'react-native-orientation';
 
@@ -28,13 +29,24 @@ const DOUBLE_PAGES = [
 const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
   const pageFlipperRef = React.useRef<PageFlipperInstance>(null);
   const [text, setText] = React.useState('');
-  const [isPortrait, setIsPortrait] = React.useState(true);
+  const [isPortrait, setIsPortrait] = React.useState(false);
   const [isSingle, setIsSingle] = React.useState(true);
   const [pressable, setPressable] = React.useState(true);
   const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
-  const [size, setSize] = React.useState({});
+  const renderOptions = true;
+  const safeInsets = useSafeAreaInsets();
+
   return (
-    <Box flex={1} padding="4" bg="white" flexDirection={{ base: 'column', lg: 'column' }} mb="l">
+    <Box
+      flex={1}
+      bg="white"
+      style={{
+        paddingTop: safeInsets.top,
+        paddingBottom: safeInsets.bottom,
+      }}
+      flexDirection={{ base: 'column', lg: 'column' }}
+      // mb="l"
+    >
       <PageFlipper
         ref={pageFlipperRef}
         data={data}
@@ -47,97 +59,94 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
         onPageDragStart={() => console.log('page drag start')}
         onPageDragEnd={() => console.log('page drag end')}
         pressable={pressable}
-        onContainerSizeChange={(size) => {
-          console.log('CONTAINER SIZE CHANGE', size);
-          setSize(size);
-        }}
-        renderContainer={(props) => {
-          if (!isPortrait) {
-            return (
-              <Box style={{ height: '100%', width: '100%' }}>
-                <Image
-                  source={require('./bookFrame.png')}
-                  style={{
-                    height: '100%',
-                    width: '100%',
-                    position: 'absolute',
-                    zIndex: -1,
-                    top: '2%',
-                    transform: [
-                      {
-                        scaleX: 1.05,
-                      },
-                      { scaleY: 1.11 },
-                    ],
-                  }}
-                  resizeMode="stretch"
-                  pointerEvents="none"
-                />
+        // renderContainer={(props) => {
+        //   if (!isPortrait) {
+        //     return (
+        //       <Box style={{ height: '100%', width: '100%' }}>
+        //         <Image
+        //           source={require('./bookFrame.png')}
+        //           style={{
+        //             height: '100%',
+        //             width: '100%',
+        //             position: 'absolute',
+        //             zIndex: -1,
+        //             top: '2%',
+        //             transform: [
+        //               {
+        //                 scaleX: 1.05,
+        //               },
+        //               { scaleY: 1.11 },
+        //             ],
+        //           }}
+        //           resizeMode="stretch"
+        //           pointerEvents="none"
+        //         />
 
-                {props.children}
-              </Box>
-            );
-          }
+        //         {props.children}
+        //       </Box>
+        //     );
+        //   }
 
-          return <View style={{ height: '100%', width: '100%' }} {...props} />;
-        }}
+        //   return <View style={{ height: '100%', width: '100%' }} {...props} />;
+        // }}
       />
+      {renderOptions && (
+        <Box
+          style={{
+            position: 'absolute',
+            top: 10,
+            backgroundColor: 'rgba(0,0,0,0.75)',
+            padding: 10,
+          }}
+        >
+          <Row alignSelf="center" space={2} alignItems="center" mt="m">
+            <Column>
+              <Text color="white">portrait</Text>
+              <Switch
+                value={isPortrait}
+                onValueChange={(val) => {
+                  setIsPortrait(val);
 
-      <Box
-        style={{
-          position: 'absolute',
-          top: 10,
-          backgroundColor: 'rgba(0,0,0,0.75)',
-          padding: 10,
-        }}
-      >
-        <Row alignSelf="center" space={2} alignItems="center" mt="m">
-          <Column>
-            <Text color="white">portrait</Text>
-            <Switch
-              value={isPortrait}
-              onValueChange={(val) => {
-                setIsPortrait(val);
-
-                if (!IS_WEB) {
-                  if (val) {
-                    Orientation.lockToPortrait();
-                  } else {
-                    Orientation.lockToLandscape();
+                  if (!IS_WEB) {
+                    if (val) {
+                      Orientation.lockToPortrait();
+                    } else {
+                      Orientation.lockToLandscape();
+                    }
                   }
-                }
-              }}
-            />
-          </Column>
-          <Column>
-            <Text color="white">single</Text>
-            <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
-          </Column>
-          <Column>
-            <Text color="white">pressable</Text>
-            <Switch value={pressable} onValueChange={() => setPressable(!pressable)} />
-          </Column>
+                }}
+              />
+            </Column>
+            <Column>
+              <Text color="white">single</Text>
+              <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
+            </Column>
+            <Column>
+              <Text color="white">pressable</Text>
+              <Switch value={pressable} onValueChange={() => setPressable(!pressable)} />
+            </Column>
 
-          <Input width={'20'} onChangeText={setText} color="white" />
-          <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
-        </Row>
-        <Row alignSelf="center" space={1} mt="m">
-          <Button
-            onPress={() => {
-              pageFlipperRef.current?.previousPage();
-            }}
-          >
-            PREV
-          </Button>
-          <Button
-            onPress={() => {
-              pageFlipperRef.current?.nextPage();
-            }}
-          >
-            NEXT
-          </Button>
-        </Row>
-      </Box>
+            <Input width={'20'} onChangeText={setText} color="white" />
+            <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
+          </Row>
+          <Row alignSelf="center" space={1} mt="m">
+            <Button
+              onPress={() => {
+                pageFlipperRef.current?.previousPage();
+              }}
+            >
+              PREV
+            </Button>
+            <Button
+              onPress={() => {
+                pageFlipperRef.current?.nextPage();
+              }}
+            >
+              NEXT
+            </Button>
+          </Row>
+        </Box>
+      )}
     </Box>
   );
 };

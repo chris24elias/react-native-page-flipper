@@ -16,7 +16,6 @@ import Animated, {
     withTiming,
     WithTimingConfig,
 } from 'react-native-reanimated';
-import Image from '../Components/Image';
 import type { Page, Size } from '../types';
 import BackShadow from '../BookPage/BackShadow';
 import FrontShadow from '../BookPage/FrontShadow';
@@ -32,13 +31,14 @@ export type IBookPageProps = {
     isAnimating: boolean;
     enabled: boolean;
     isPressable: boolean;
-    getBookImageStyle: (right: boolean, front: boolean) => any;
+    getPageStyle: (right: boolean, front: boolean) => any;
     isAnimatingRef: React.MutableRefObject<boolean>;
     next: Page;
     onFlipStart?: (id: number) => void;
     onPageDragStart?: () => void;
     onPageDrag?: () => void;
     onPageDragEnd?: () => void;
+    renderPage?: (data: any) => any;
 };
 
 export type PortraitBookInstance = { turnPage: (index: 1 | -1) => void };
@@ -58,7 +58,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
             enabled,
             isPressable,
             setIsAnimating,
-            getBookImageStyle,
+            getPageStyle,
             isAnimating,
             isAnimatingRef,
             next,
@@ -66,6 +66,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
             onPageDrag,
             onPageDragEnd,
             onPageDragStart,
+            renderPage,
         },
         ref
     ) => {
@@ -211,8 +212,9 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
         const iPageProps = {
             containerSize,
             containerWidth,
-            getBookImageStyle,
+            getPageStyle,
             rotateYAsDeg,
+            renderPage,
         };
 
         return (
@@ -264,10 +266,11 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
                             />
                         ) : (
                             <View style={{ height: '100%', width: '100%' }}>
-                                <Image
-                                    source={{ uri: current.right }}
-                                    style={getBookImageStyle(true, true)}
-                                />
+                                {renderPage && (
+                                    <View style={getPageStyle(true, true)}>
+                                        {renderPage(current.right)}
+                                    </View>
+                                )}
                             </View>
                         )}
                         {prev && (
@@ -286,7 +289,8 @@ type IPageProps = {
     rotateYAsDeg: Animated.SharedValue<number>;
     containerWidth: number;
     containerSize: Size;
-    getBookImageStyle: any;
+    getPageStyle: any;
+    renderPage?: (data: any) => any;
 };
 
 const IPage: React.FC<IPageProps> = ({
@@ -295,7 +299,8 @@ const IPage: React.FC<IPageProps> = ({
     rotateYAsDeg,
     containerWidth,
     containerSize,
-    getBookImageStyle,
+    getPageStyle,
+    renderPage,
 }) => {
     const [loaded, setLoaded] = useState(right);
 
@@ -355,8 +360,8 @@ const IPage: React.FC<IPageProps> = ({
         return style;
     });
 
-    const frontImageStyle = getBookImageStyle(right, true);
-    const backImageStyle = getBookImageStyle(right, false);
+    const frontPageStyle = getPageStyle(right, true);
+    const backPageStyle = getPageStyle(right, false);
 
     if (!loaded) {
         // hack fix
@@ -380,41 +385,41 @@ const IPage: React.FC<IPageProps> = ({
             {/* BACK */}
             <Animated.View
                 style={[
-                    styles.imageContainer,
+                    styles.pageContainer,
                     portraitBackStyle,
                     { overflow: 'visible' },
                 ]}
             >
-                <View style={styles.imageContainer}>
-                    <Image
-                        source={{
-                            uri: page.left,
-                        }}
-                        style={[
-                            backImageStyle,
+                <View style={styles.pageContainer}>
+                    {renderPage && (
+                        <Animated.View
+                            style={[
+                                backPageStyle,
 
-                            {
-                                opacity: 0.2,
-                                transform: [
-                                    { rotateX: '180deg' },
-                                    { rotateZ: '180deg' },
-                                ],
-                            },
-                        ]}
-                    />
+                                {
+                                    opacity: 0.2,
+                                    transform: [
+                                        { rotateX: '180deg' },
+                                        { rotateZ: '180deg' },
+                                    ],
+                                },
+                            ]}
+                        >
+                            {renderPage(page.left)}
+                        </Animated.View>
+                    )}
                 </View>
                 <BackShadow {...{ degrees: rotationVal, right: true }} />
                 <FrontShadow {...shadowProps} />
                 <PageShadow {...shadowProps} containerSize={containerSize} />
             </Animated.View>
             {/* FRONT */}
-            <Animated.View style={[styles.imageContainer, portraitFrontStyle]}>
-                <Image
-                    source={{
-                        uri: page.left,
-                    }}
-                    style={[frontImageStyle]}
-                />
+            <Animated.View style={[styles.pageContainer, portraitFrontStyle]}>
+                {renderPage && (
+                    <Animated.View style={[frontPageStyle]}>
+                        {renderPage(page.left)}
+                    </Animated.View>
+                )}
             </Animated.View>
         </View>
     );
@@ -426,7 +431,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    imageContainer: {
+    pageContainer: {
         height: '100%',
         width: '100%',
         position: 'absolute',

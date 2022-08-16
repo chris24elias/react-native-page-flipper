@@ -9,10 +9,8 @@ import {
     PortraitBookInstance,
 } from './portrait/BookPagePortrait';
 import type { Page, Size } from './types';
-import cacheImages from './utils/cacheImages';
-import { createPages, getImageSize } from './utils/utils';
+import { createPages } from './utils/utils';
 import { BookPageBackground } from './BookPageBackground';
-import Image from './Components/Image';
 
 export type IPageFlipperProps = {
     data: string[];
@@ -29,6 +27,8 @@ export type IPageFlipperProps = {
     onEndReached?: () => void;
     onInitialized?: (props: any) => void;
     renderContainer?: () => any;
+    renderPage?: (data: any) => any;
+    pageSize: Size;
 };
 
 export type PageFlipperInstance = {
@@ -42,7 +42,7 @@ export type State = {
     pages: Page[];
     isAnimating: boolean;
     initialized: boolean;
-    realImageSize: Size;
+    // pageSize: Size;
     prev: Page;
     current: Page;
     next: Page;
@@ -75,6 +75,8 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             onEndReached,
             onInitialized,
             renderContainer,
+            renderPage,
+            pageSize = { height: 600, width: 400 },
         },
         ref
     ) => {
@@ -87,7 +89,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             pages: [],
             isAnimating: false,
             initialized: false,
-            realImageSize: { width: 0, height: 0 },
+            // pageSize: { width: 0, height: 0 },
             prev: { left: '', right: '' },
             current: { left: '', right: '' },
             next: { left: '', right: '' },
@@ -107,17 +109,17 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                 };
             }
             let size = {
-                height: state.realImageSize.height,
+                height: pageSize.height,
                 width:
                     singleImageMode && !state.isPortrait
-                        ? state.realImageSize.width * 2
-                        : state.realImageSize.width,
+                        ? pageSize.width * 2
+                        : pageSize.width,
             };
 
             if (!singleImageMode && state.isPortrait) {
                 size = {
-                    height: state.realImageSize.height,
-                    width: state.realImageSize.width / 2,
+                    height: pageSize.height,
+                    width: pageSize.width / 2,
                 };
             }
 
@@ -156,8 +158,8 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             width,
             state.initialized,
             state.isPortrait,
-            state.realImageSize.height,
-            state.realImageSize.width,
+            pageSize.height,
+            pageSize.width,
         ]);
 
         useEffect(() => {
@@ -169,16 +171,11 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                         data,
                     });
 
-                    cacheImages(data.map((uri) => ({ uri })));
-
-                    const realImageSize = await getImageSize(data[0]);
-
                     let adjustedIndex = getAdjustedIndex(allPages);
 
                     setState({
                         initialized: true,
                         pages: allPages,
-                        realImageSize,
                         prev: allPages[adjustedIndex - 1],
                         current: allPages[adjustedIndex],
                         next: allPages[adjustedIndex + 1],
@@ -383,9 +380,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             );
         };
 
-        const getBookImageStyle = (right: boolean, front: boolean) => {
+        const getPageStyle = (right: boolean, front: boolean) => {
             if (!singleImageMode && isPortrait) {
-                const imageStyle: any = {
+                const pageStyle: any = {
                     height: containerSize.height,
                     width: containerSize.width * 2,
                     position: 'absolute',
@@ -395,21 +392,21 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
                 if (front) {
                     if (isEvenPage) {
-                        imageStyle.left = right ? 0 : -containerSize.width;
+                        pageStyle.left = right ? 0 : -containerSize.width;
                     } else {
-                        imageStyle.left = right ? -containerSize.width : 0;
+                        pageStyle.left = right ? -containerSize.width : 0;
                     }
                 } else {
                     if (isEvenPage) {
-                        imageStyle.left = right ? -containerSize.width : 0;
+                        pageStyle.left = right ? -containerSize.width : 0;
                     } else {
-                        imageStyle.left = right ? 0 : -containerSize.width;
+                        pageStyle.left = right ? 0 : -containerSize.width;
                     }
                 }
-                return imageStyle;
+                return pageStyle;
             }
 
-            const imageStyle: any = {
+            const pageStyle: any = {
                 height: containerSize.height,
                 width:
                     singleImageMode && !isPortrait
@@ -421,16 +418,16 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             const offset = singleImageMode ? 0 : -containerSize.width / 2;
 
             if (isPortrait && front) {
-                imageStyle.left = 0;
+                pageStyle.left = 0;
             } else if ((front && right) || (!front && right)) {
                 // front right or back right
-                imageStyle.left = offset;
+                pageStyle.left = offset;
             } else if (front && !right) {
                 // front left
-                imageStyle.right = offset;
+                pageStyle.right = offset;
             }
 
-            return imageStyle;
+            return pageStyle;
         };
 
         if (!state.initialized) {
@@ -459,13 +456,14 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                 setIsAnimating: setIsAnimating,
                 isAnimatingRef: isAnimatingRef,
                 onPageFlip: onPageFlipped,
-                getBookImageStyle,
+                getPageStyle,
                 single: singleImageMode,
                 onFlipStart,
                 onPageDrag,
                 onPageDragEnd,
                 onPageDragStart,
                 isPressable: pressable,
+                renderPage,
             };
 
         const ContentWrapper = renderContainer ? renderContainer : Wrapper;
@@ -517,8 +515,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                                     right={!next ? current.right : next.right}
                                     isFirstPage={isFirstPage}
                                     isLastPage={isLastPage}
-                                    getBookImageStyle={getBookImageStyle}
+                                    getPageStyle={getPageStyle}
                                     containerSize={containerSize}
+                                    renderPage={renderPage}
                                 />
                             </View>
                         ) : (
@@ -544,13 +543,16 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                                             overflow: 'hidden',
                                         }}
                                     >
-                                        <Image
-                                            source={{ uri: next.right }}
-                                            style={getBookImageStyle(
-                                                true,
-                                                false
-                                            )}
-                                        />
+                                        {renderPage && (
+                                            <View
+                                                style={getPageStyle(
+                                                    true,
+                                                    false
+                                                )}
+                                            >
+                                                {renderPage(next.right)}
+                                            </View>
+                                        )}
                                     </View>
                                 )}
                             </View>
@@ -566,7 +568,9 @@ export default React.memo(PageFlipper);
 
 const Wrapper: React.FC = (props) => <View style={styles.wrap} {...props} />;
 
-const Empty: React.FC = () => <View style={styles.container} />;
+const Empty: React.FC = () => (
+    <View style={styles.container} pointerEvents="none" />
+);
 
 const styles = StyleSheet.create({
     container: {

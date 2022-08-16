@@ -16,6 +16,9 @@ const Main: React.FC<IMainProps> = ({ navigation }) => {
       <Pressable onPress={() => navigation.navigate('LandscapeExample')}>
         <Text>Landscape Example</Text>
       </Pressable>
+      <Pressable onPress={() => navigation.navigate('CustomContainerExample')}>
+        <Text>Custom Container Example</Text>
+      </Pressable>
     </View>
   );
 };

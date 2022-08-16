@@ -2,7 +2,7 @@ import usePrevious from './hooks/usePrevious';
 import useSetState from './hooks/useSetState';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRef } from 'react';
-import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View, ViewStyle } from 'react-native';
 import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
 import {
     BookPagePortrait,
@@ -29,6 +29,7 @@ export type IPageFlipperProps = {
     renderContainer?: () => any;
     renderPage?: (data: any) => any;
     pageSize: Size;
+    contentContainerStyle: ViewStyle;
 };
 
 export type PageFlipperInstance = {
@@ -77,6 +78,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             renderContainer,
             renderPage,
             pageSize = { height: 600, width: 400 },
+            contentContainerStyle,
         },
         ref
     ) => {
@@ -468,6 +470,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                             height: containerSize.height,
                             width: containerSize.width,
                         },
+                        contentContainerStyle,
                     ]}
                 >
                     <ContentWrapper>
@@ -555,11 +558,9 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
 
 export default React.memo(PageFlipper);
 
-const Wrapper: React.FC = (props) => <View style={styles.wrap} {...props} />;
+const Wrapper = (props: any) => <View style={styles.wrap} {...props} />;
 
-const Empty: React.FC = () => (
-    <View style={styles.container} pointerEvents="none" />
-);
+const Empty = () => <View style={styles.container} pointerEvents="none" />;
 
 const styles = StyleSheet.create({
     container: {
@@ -572,14 +573,14 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flexDirection: 'row',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        // shadowColor: '#000',
+        // shadowOffset: {
+        //     width: 0,
+        //     height: 2,
+        // },
+        // shadowOpacity: 0.25,
+        // shadowRadius: 3.84,
+        // elevation: 5,
         backgroundColor: 'white',
     },
     content: {

@@ -312,7 +312,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
                                 {
                                     position: 'absolute',
                                     height: '100%',
-                                    width: '50%',
+                                    width: '25%',
                                     zIndex: 10000,
                                 },
                                 right ? { right: 0 } : { left: 0 },

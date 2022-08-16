@@ -2,7 +2,7 @@ import usePrevious from './hooks/usePrevious';
 import useSetState from './hooks/useSetState';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRef } from 'react';
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { BookPage, BookPageInstance, IBookPageProps } from './BookPage';
 import {
     BookPagePortrait,
@@ -368,18 +368,6 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
             [setState]
         );
 
-        const getLastPage = () => {
-            if (renderLastPage) {
-                return renderLastPage();
-            }
-
-            return (
-                <View style={styles.container}>
-                    <Text>last page</Text>
-                </View>
-            );
-        };
-
         const getPageStyle = (right: boolean, front: boolean) => {
             if (!singleImageMode && isPortrait) {
                 const pageStyle: any = {
@@ -445,8 +433,11 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
         } = state;
         const isFirstPage = pageIndex === 0;
         const isLastPage = pageIndex === pages.length - 1;
+        const isSecondToLastPage = pageIndex === pages.length - 2;
         const shouldRenderLastPage =
-            isLastPage && singleImageMode && data.length % 2 !== 0;
+            (isSecondToLastPage || isLastPage) &&
+            singleImageMode &&
+            data.length % 2 !== 0;
 
         const bookPageProps: Omit<IBookPageProps, 'right' | 'front' | 'back'> =
             {
@@ -495,11 +486,7 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                                     />
                                 )}
                                 {!next ? (
-                                    shouldRenderLastPage ? (
-                                        getLastPage()
-                                    ) : (
-                                        <Empty />
-                                    )
+                                    <Empty />
                                 ) : (
                                     <BookPage
                                         ref={nextBookPage}
@@ -518,6 +505,8 @@ const PageFlipper = React.forwardRef<PageFlipperInstance, IPageFlipperProps>(
                                     getPageStyle={getPageStyle}
                                     containerSize={containerSize}
                                     renderPage={renderPage}
+                                    renderLastPage={renderLastPage}
+                                    shouldRenderLastPage={shouldRenderLastPage}
                                 />
                             </View>
                         ) : (

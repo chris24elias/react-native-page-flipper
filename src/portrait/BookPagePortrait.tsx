@@ -233,7 +233,7 @@ const BookPagePortrait = React.forwardRef<PortraitBookInstance, IBookPageProps>(
                                 style={{
                                     position: 'absolute',
                                     height: '100%',
-                                    width: '30%',
+                                    width: '25%',
                                     zIndex: 10000,
                                     left: 0,
                                     // backgroundColor: 'red',

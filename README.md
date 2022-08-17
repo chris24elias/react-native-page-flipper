@@ -7,10 +7,10 @@ Check out the [demo](https://chris24elias.github.io/react-native-page-flipper/) 
 yarn add react-native-page-flipper
 ```
 
-In order for this package to work properly, its built using expo-linear-gradient, react-native-fast-image,react-native-gesture-handler,react-native-linear-gradient, and react-native-reanimated. So make sure you also have these installed,
+In order for this package to work properly, its built using expo-linear-gradient,react-native-gesture-handler,react-native-linear-gradient, and react-native-reanimated. So make sure you also have these installed,
 
 ```sh
-yarn add expo-linear-gradient react-native-fast-image react-native-gesture-handler react-native-linear-gradient react-native-reanimated
+yarn add expo-linear-gradient react-native-gesture-handler react-native-linear-gradient react-native-reanimated
 ```
 
 Notes:

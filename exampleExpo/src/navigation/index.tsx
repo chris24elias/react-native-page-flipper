@@ -1,3 +1,4 @@
+import { AnimatedExample } from '@/screens/AnimatedExample';
 import { CustomContainerExample } from '@/screens/CustomContainerExample';
 import { LandscapeExample } from '@/screens/LanscapeExample';
 import { Main } from '@/screens/Main';
@@ -20,6 +21,7 @@ const Navigation: React.FC<INavigationProps> = ({}) => {
         <Stack.Screen name="PortraitExample" component={PortraitExample} />
         <Stack.Screen name="LandscapeExample" component={LandscapeExample} />
         <Stack.Screen name="CustomContainerExample" component={CustomContainerExample} />
+        <Stack.Screen name="AnimatedExample" component={AnimatedExample} />
       </Stack.Navigator>
     </NavigationContainer>
   );

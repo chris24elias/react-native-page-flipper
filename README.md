@@ -15,6 +15,7 @@ yarn add expo-linear-gradient react-native-gesture-handler react-native-linear-g
 
 Notes:
 react-native-linear-gradient is used for the shadows on iOS and Android, expo-linear-gradient is used on Web.
+in order to avoid page flickering with images, use react-native-fast-image as your image componenet, and preload the image files
 
 
 ### Landscape

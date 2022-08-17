@@ -20,7 +20,12 @@
     "keywords": [
         "react-native",
         "ios",
-        "android"
+        "android",
+        "page",
+        "flip",
+        "page-flip",
+        "flipper",
+        "page-flipper"
     ],
     "repository": "https://github.com/chris24elias/react-native-page-flipper",
     "author": "Chris (https://github.com/chris24elias)",

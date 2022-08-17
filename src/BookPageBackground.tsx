@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { BookSpine } from './BookPage/BookSpine';
-import Image from './Components/Image';
 import type { Size } from './types';
 
 type IBookPageBackgroundProps = {
@@ -10,7 +9,10 @@ type IBookPageBackgroundProps = {
     isFirstPage: boolean;
     isLastPage: boolean;
     containerSize: Size;
-    getBookImageStyle: (right: boolean, front: boolean) => any;
+    getPageStyle: (right: boolean, front: boolean) => any;
+    renderPage?: (data: any) => any;
+    renderLastPage?: () => any;
+    shouldRenderLastPage: boolean;
 };
 
 const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
@@ -19,27 +21,36 @@ const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
     isFirstPage,
     isLastPage,
     containerSize,
-    getBookImageStyle,
+    getPageStyle,
+    renderPage,
+    renderLastPage,
+    shouldRenderLastPage,
 }) => {
-    const leftImageStyle = getBookImageStyle(false, true);
-    const rightImageStyle = getBookImageStyle(true, true);
+    const leftPageStyle = getPageStyle(false, true);
+    const rightPageStyle = getPageStyle(true, true);
 
     return (
         <View style={styles.container}>
-            <View style={styles.imageContainer}>
-                {left && (
-                    <Image source={{ uri: left }} style={[leftImageStyle]} />
+            <View style={styles.pageContainer}>
+                {left && renderPage && (
+                    <View style={[leftPageStyle]}>{renderPage(left)}</View>
                 )}
                 {isFirstPage && (
                     <BookSpine right={false} containerSize={containerSize} />
                 )}
             </View>
-            <View style={styles.imageContainer}>
-                {right && (
-                    <Image source={{ uri: right }} style={[rightImageStyle]} />
+            <View style={styles.pageContainer}>
+                {right && renderPage && (
+                    <View style={[rightPageStyle]}>{renderPage(right)}</View>
                 )}
                 {isLastPage && (
                     <BookSpine right={true} containerSize={containerSize} />
+                )}
+
+                {shouldRenderLastPage && renderLastPage && (
+                    <View style={[rightPageStyle, { zIndex: -1 }]}>
+                        {renderLastPage()}
+                    </View>
                 )}
             </View>
         </View>
@@ -49,7 +60,7 @@ const BookPageBackground: React.FC<IBookPageBackgroundProps> = ({
 export { BookPageBackground };
 
 const styles = StyleSheet.create({
-    imageContainer: {
+    pageContainer: {
         flex: 1,
         backfaceVisibility: 'hidden',
         overflow: 'hidden',

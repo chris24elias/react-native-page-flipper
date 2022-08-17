@@ -15,7 +15,6 @@ import Animated, {
     withTiming,
     WithTimingConfig,
 } from 'react-native-reanimated';
-import Image from '../Components/Image';
 import type { Page, Size } from '../types';
 import BackShadow from './BackShadow';
 import FrontShadow from './FrontShadow';
@@ -34,12 +33,13 @@ export type IBookPageProps = {
     isAnimating: boolean;
     enabled: boolean;
     isPressable: boolean;
-    getBookImageStyle: (right: boolean, front: boolean) => any;
+    getPageStyle: (right: boolean, front: boolean) => any;
     single: boolean;
     onFlipStart?: (id: number) => void;
     onPageDragStart?: () => void;
     onPageDrag?: () => void;
     onPageDragEnd?: () => void;
+    renderPage?: (data: any) => any;
 };
 
 export type BookPageInstance = {
@@ -64,12 +64,13 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
             isAnimating,
             enabled,
             isPressable,
-            getBookImageStyle,
+            getPageStyle,
             single,
             onFlipStart,
             onPageDrag,
             onPageDragEnd,
             onPageDragStart,
+            renderPage,
         },
         ref
     ) => {
@@ -205,7 +206,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
             };
         });
 
-        const animatedBackImageStyle = useAnimatedStyle(() => {
+        const animatedBackPageStyle = useAnimatedStyle(() => {
             const l = right
                 ? 0
                 : interpolate(
@@ -290,8 +291,8 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
             return null;
         }
 
-        const frontImageStyle = getBookImageStyle(right, true);
-        const backImageStyle = getBookImageStyle(right, false);
+        const frontPageStyle = getPageStyle(right, true);
+        const backPageStyle = getPageStyle(right, false);
 
         const frontUrl = right ? front.right : front.left;
         const backUrl = right ? back.left : back.right;
@@ -311,7 +312,7 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
                                 {
                                     position: 'absolute',
                                     height: '100%',
-                                    width: '50%',
+                                    width: '25%',
                                     zIndex: 10000,
                                 },
                                 right ? { right: 0 } : { left: 0 },
@@ -322,22 +323,23 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
                     {/* BACK */}
                     <Animated.View
                         style={[
-                            styles.imageContainer,
+                            styles.pageContainer,
                             backStyle,
                             { overflow: 'visible' },
                         ]}
                     >
-                        <View style={styles.imageContainer}>
+                        <View style={styles.pageContainer}>
                             {backUrl ? (
-                                <Image
-                                    source={{
-                                        uri: backUrl,
-                                    }}
-                                    style={[
-                                        backImageStyle,
-                                        animatedBackImageStyle,
-                                    ]}
-                                />
+                                renderPage && (
+                                    <Animated.View
+                                        style={[
+                                            backPageStyle,
+                                            animatedBackPageStyle,
+                                        ]}
+                                    >
+                                        {renderPage(backUrl)}
+                                    </Animated.View>
+                                )
                             ) : (
                                 <BlankPage />
                             )}
@@ -372,14 +374,13 @@ const BookPage = React.forwardRef<BookPageInstance, IBookPageProps>(
                         )}
                     </Animated.View>
                     {/* FRONT */}
-                    <Animated.View style={[styles.imageContainer, frontStyle]}>
+                    <Animated.View style={[styles.pageContainer, frontStyle]}>
                         {frontUrl ? (
-                            <Image
-                                source={{
-                                    uri: frontUrl,
-                                }}
-                                style={[frontImageStyle]}
-                            />
+                            renderPage && (
+                                <Animated.View style={[frontPageStyle]}>
+                                    {renderPage(frontUrl)}
+                                </Animated.View>
+                            )
                         ) : (
                             <BlankPage />
                         )}
@@ -408,7 +409,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    imageContainer: {
+    pageContainer: {
         height: '100%',
         width: '100%',
         position: 'absolute',

@@ -1,37 +1,9 @@
 import PageFlipper, { PageFlipperInstance } from 'react-native-page-flipper';
-import { RootStackScreenProps } from '@/types';
-import { IS_WEB } from '@/utils/Constants';
-import { Box, Button, Column, Input, Row, Text } from 'native-base';
+import { Box, Button, Row, Text } from 'native-base';
 import * as React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Platform, Switch, useWindowDimensions, View } from 'react-native';
-import Orientation from 'react-native-orientation';
-import { Image as RNImage } from 'react-native';
-
-import { randomNumber } from '@/utils';
-// import Image from 'react-native-fast-image';
-
-const Image =
-  Platform.OS === 'web' ? require('react-native').Image : require('react-native-fast-image');
-
-const SINGLE_PAGES = [
-  'https://up.mangadudes.com/bleach/18/bleach-9337-e60a76a126bc6ecd3211aeaad51a7dba.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9338-89fcdb98b22c94781ba2846ea2e562c3.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9339-5d0e73373eb814d65b18bfa4ca533be8.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9340-c1220292956ae4cc1df0676e2d01c2e1.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9341-159bcbae27446cd1d6c964b4b70af020.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9342-024e1db41ff0ea6e6bc47574b209fda4.jpg',
-  'https://up.mangadudes.com/bleach/18/bleach-9344-b14e956a08b6998dd00a61f89db84238.jpg',
-];
-
-const DOUBLE_PAGES = [
-  'https://images.unsplash.com/photo-1422289304860-97fce8cf2066?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&h=1000&q=80',
-  'https://images.unsplash.com/photo-1609854453157-e2d474ff63e3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&h=1000&q=80',
-  'https://images.unsplash.com/photo-1466854076813-4aa9ac0fc347?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&h=1000&q=80',
-  'https://images.unsplash.com/photo-1422289304860-97fce8cf2066?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&h=1000&q=80',
-  'https://images.unsplash.com/photo-1609854453157-e2d474ff63e3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&h=1000&q=80',
-  'https://images.unsplash.com/photo-1466854076813-4aa9ac0fc347?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&h=1000&q=80',
-];
+import { View } from 'react-native';
+import { IS_WEB } from '@/utils/Constants';
 
 const FAKE_TEXTS = [
   `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Facilisis volutpat est velit egestas dui id ornare arcu odio. Sit amet commodo nulla facilisi nullam. Nullam eget felis eget nunc lobortis mattis aliquam faucibus. Sit amet luctus venenatis lectus. Velit scelerisque in dictum non. Fermentum iaculis eu non diam phasellus vestibulum lorem. Vitae elementum curabitur vitae nunc sed velit. Amet purus gravida quis blandit turpis cursus. Eget dolor morbi non arcu. Diam vulputate ut pharetra sit.
@@ -54,53 +26,50 @@ Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc. Interdum v
 Orci sagittis eu volutpat odio facilisis. Curabitur vitae nunc sed velit. Nec feugiat nisl pretium fusce id velit ut tortor pretium. Nec feugiat nisl pretium fusce id. Ullamcorper sit amet risus nullam. Sagittis id consectetur purus ut faucibus pulvinar. Dolor magna eget est lorem ipsum dolor sit amet. Laoreet id donec ultrices tincidunt arcu non sodales. Bibendum est ultricies integer quis auctor elit sed vulputate mi. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor posuere. Aliquet nec ullamcorper sit amet risus nullam eget. Ac turpis egestas integer eget aliquet. Ornare lectus sit amet est placerat in. Odio eu feugiat pretium nibh ipsum. Cras adipiscing enim eu turpis.`,
 ];
 
-const preload = (images: string[]) => {
-  images.forEach((image) => {
-    RNImage.prefetch(image);
-  });
-};
-
-preload(SINGLE_PAGES);
-
-const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
-  const { height, width } = useWindowDimensions();
-  const pageFlipperRef = React.useRef<PageFlipperInstance>(null);
-  const [text, setText] = React.useState('');
-  const [isPortrait, setIsPortrait] = React.useState(false);
-  const [isSingle, setIsSingle] = React.useState(true);
-  const [enabled, setEnabled] = React.useState(true);
-  const [pressable, setPressable] = React.useState(true);
-  const data = SINGLE_PAGES; // isSingle ? SINGLE_PAGES : DOUBLE_PAGES;
-  const renderOptions = true;
+const TextExample = () => {
   const safeInsets = useSafeAreaInsets();
-
+  const pageFlipperRef = React.useRef<PageFlipperInstance>(null);
   return (
-    <Box
-      flex={1}
-      bg="white"
-      style={
-        {
-          // paddingTop: safeInsets.top,
-          // paddingBottom: safeInsets.bottom,
-        }
-      }
-      flexDirection={{ base: 'column', lg: 'column' }}
-      // mb="l"
-    >
+    <Box flex={1} bg="white">
+      <Box position="absolute" zIndex={5}>
+        <Row alignSelf="center" space={1} mt="m">
+          <Button
+            onPress={() => {
+              pageFlipperRef.current?.previousPage();
+            }}
+          >
+            PREV
+          </Button>
+          <Button
+            onPress={() => {
+              pageFlipperRef.current?.nextPage();
+            }}
+          >
+            NEXT
+          </Button>
+        </Row>
+      </Box>
       <PageFlipper
         ref={pageFlipperRef}
         data={FAKE_TEXTS}
-        enabled={enabled}
-        singleImageMode={isSingle}
-        portrait={isPortrait}
-        onFlipStart={() => console.log('FLIP START')}
-        onFlippedEnd={(i) => {
-          console.log('FLIP END', i);
+        pageSize={{
+          height: 650,
+          width: 400,
         }}
-        onPageDrag={() => console.log('page dragging')}
-        onPageDragStart={() => console.log('page drag start')}
-        onPageDragEnd={() => console.log('page drag end')}
-        pressable={pressable}
+        enabled={false}
+        singleImageMode={true}
+        portrait={IS_WEB ? false : true}
+        pressable={false}
+        contentContainerStyle={{
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: 2,
+          },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}
         renderPage={(data) => {
           return (
             <View
@@ -116,112 +85,11 @@ const Home: React.FC<RootStackScreenProps<'Home'>> = () => {
                 {data}
               </Text>
             </View>
-            // <Image
-            //   source={{ uri: data }}
-            //   style={{ height: '100%', width: '100%' }}
-            //   // resizeMode={'contain'}
-            // />
           );
         }}
-        pageSize={{
-          height: 650,
-          width: 400,
-        }}
-        // renderContainer={(props) => {
-        //   if (!isPortrait) {
-        //     return (
-        //       <Box style={{ height: '100%', width: '100%' }}>
-        //         <Image
-        //           source={require('./bookFrame.png')}
-        //           style={{
-        //             height: '100%',
-        //             width: '100%',
-        //             position: 'absolute',
-        //             zIndex: -1,
-        //             top: '2%',
-        //             transform: [
-        //               {
-        //                 scaleX: 1.05,
-        //               },
-        //               { scaleY: 1.11 },
-        //             ],
-        //           }}
-        //           resizeMode="stretch"
-        //           pointerEvents="none"
-        //         />
-
-        //         {props.children}
-        //       </Box>
-        //     );
-        //   }
-
-        //   return <View style={{ height: '100%', width: '100%' }} {...props} />;
-        // }}
       />
-      {renderOptions && (
-        <Box
-          style={{
-            position: 'absolute',
-            top: 10,
-            backgroundColor: 'rgba(0,0,0,0.75)',
-            padding: 10,
-            opacity: 0.7,
-          }}
-        >
-          <Row alignSelf="center" space={2} alignItems="center" mt="m">
-            <Column>
-              <Text color="white">enabled</Text>
-              <Switch value={enabled} onValueChange={() => setEnabled(!enabled)} />
-            </Column>
-            <Column>
-              <Text color="white">portrait</Text>
-              <Switch
-                value={isPortrait}
-                onValueChange={(val) => {
-                  setIsPortrait(val);
-
-                  if (!IS_WEB) {
-                    if (val) {
-                      Orientation.lockToPortrait();
-                    } else {
-                      Orientation.lockToLandscape();
-                    }
-                  }
-                }}
-              />
-            </Column>
-            <Column>
-              <Text color="white">single</Text>
-              <Switch value={isSingle} onValueChange={() => setIsSingle(!isSingle)} />
-            </Column>
-            <Column>
-              <Text color="white">pressable</Text>
-              <Switch value={pressable} onValueChange={() => setPressable(!pressable)} />
-            </Column>
-
-            <Input width={'20'} onChangeText={setText} color="white" />
-            <Button onPress={() => pageFlipperRef.current?.goToPage(Number(text))}>GO TO</Button>
-          </Row>
-          <Row alignSelf="center" space={1} mt="m">
-            <Button
-              onPress={() => {
-                pageFlipperRef.current?.previousPage();
-              }}
-            >
-              PREV
-            </Button>
-            <Button
-              onPress={() => {
-                pageFlipperRef.current?.nextPage();
-              }}
-            >
-              NEXT
-            </Button>
-          </Row>
-        </Box>
-      )}
     </Box>
   );
 };
 
-export { Home };
+export { TextExample };

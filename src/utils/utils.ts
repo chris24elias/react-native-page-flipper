@@ -1,6 +1,5 @@
-import { Image } from 'react-native';
 import { runOnJS } from 'react-native-reanimated';
-import type { Page, Size } from '../types';
+import type { Page } from '../types';
 import type { TransformsStyle } from 'react-native';
 
 export const createPages = ({
@@ -52,15 +51,6 @@ export const createPages = ({
     }
     return allPages;
 };
-
-export const getImageSize = (uri: string): Promise<Size> =>
-    new Promise((resolve, reject) =>
-        Image.getSize(
-            uri,
-            (width, height) => resolve({ width, height }),
-            reject
-        )
-    );
 
 type RNTransform = Exclude<TransformsStyle['transform'], undefined>;
 

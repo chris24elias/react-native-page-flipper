@@ -6,7 +6,7 @@ import useCachedResources from './src/hooks/useCachedResources';
 import { NativeBaseProvider } from 'native-base';
 import theme from './src/theme/theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Home } from './src/screens/Home';
+import { Navigation } from './src/navigation';
 
 export default function App() {
   const isLoadingComplete = useCachedResources();
@@ -18,7 +18,7 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <NativeBaseProvider theme={theme}>
           <SafeAreaProvider>
-            <Home />
+            <Navigation />
             <StatusBar />
           </SafeAreaProvider>
         </NativeBaseProvider>

@@ -22,6 +22,9 @@ const Main: React.FC<IMainProps> = ({ navigation }) => {
       <Pressable onPress={() => navigation.navigate('AnimatedExample')}>
         <Text>AnimatedExample</Text>
       </Pressable>
+      <Pressable onPress={() => navigation.navigate('SingleImageDisabledExample')}>
+        <Text>SingleImageDisabledExample</Text>
+      </Pressable>
     </View>
   );
 };

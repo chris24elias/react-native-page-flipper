@@ -1,7 +1,7 @@
 import PageFlipper from 'react-native-page-flipper';
 import { Box, Text } from 'native-base';
 import * as React from 'react';
-import { Image, IS_WEB, MANGA_PAGES } from '@/utils/Constants';
+import { Image, MANGA_PAGES } from '@/utils/Constants';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const AnimatedExample = ({}) => {
@@ -14,8 +14,6 @@ const AnimatedExample = ({}) => {
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      //   opacity: IS_WEB ? 1 : opacity.value,
-      // top: '-2%',
       transform: [
         {
           perspective: 1000,
@@ -66,25 +64,6 @@ const AnimatedExample = ({}) => {
           animatedStyle,
         ]}
       >
-        {/* <Image
-          source={require('./bookFrame.png')}
-          style={{
-            height: '100%',
-            width: '100%',
-            position: 'absolute',
-            zIndex: -1,
-            top: '2%',
-            transform: [
-              {
-                scaleX: 1.05,
-              },
-              { scaleY: 1.11 },
-            ],
-          }}
-          resizeMode="stretch"
-          pointerEvents="none"
-        /> */}
-
         {props.children}
       </Animated.View>
     );
@@ -105,13 +84,7 @@ const AnimatedExample = ({}) => {
           backgroundColor: 'transparent',
         }}
         renderPage={(data) => {
-          return (
-            <Image
-              source={{ uri: data }}
-              style={{ height: '100%', width: '100%' }}
-              //   resizeMode="contain"
-            />
-          );
+          return <Image source={{ uri: data }} style={{ height: '100%', width: '100%' }} />;
         }}
         renderLastPage={() => {
           return (

@@ -2,7 +2,7 @@ import PageFlipper, { PageFlipperInstance } from 'react-native-page-flipper';
 import { Box, Button, Row, Text } from 'native-base';
 import * as React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image, useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
 import { IS_WEB } from '@/utils/Constants';
 
 const FAKE_TEXTS = [
@@ -87,33 +87,6 @@ const TextExample = () => {
             </View>
           );
         }}
-        // renderContainer={
-        //   IS_WEB
-        //     ? (props) => (
-        //         <Box style={{ height: '100%', width: '100%' }} pointerEvents="none">
-        //           <Image
-        //             source={require('./bookFrame.png')}
-        //             style={{
-        //               height: '100%',
-        //               width: '100%',
-        //               position: 'absolute',
-        //               zIndex: -1,
-        //               top: '2%',
-        //               transform: [
-        //                 {
-        //                   scaleX: 1.05,
-        //                 },
-        //                 { scaleY: 1.11 },
-        //               ],
-        //             }}
-        //             resizeMode="stretch"
-        //           />
-
-        //           {props.children}
-        //         </Box>
-        //       )
-        //     : undefined
-        // }
       />
     </Box>
   );

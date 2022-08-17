@@ -27,13 +27,7 @@ const CustomContainerExample = ({}) => {
           elevation: 5,
         }}
         renderPage={(data) => {
-          return (
-            <Image
-              source={{ uri: data }}
-              style={{ height: '100%', width: '100%' }}
-              // resizeMode="contain"
-            />
-          );
+          return <Image source={{ uri: data }} style={{ height: '100%', width: '100%' }} />;
         }}
         renderLastPage={() => {
           return (
@@ -45,24 +39,6 @@ const CustomContainerExample = ({}) => {
         renderContainer={(props) => {
           return (
             <Box flex={1}>
-              {/* <Image
-                source={require('./bookFrame.png')}
-                style={{
-                  height: '100%',
-                  width: '100%',
-                  position: 'absolute',
-                  zIndex: -1,
-                  top: '2%',
-                  transform: [
-                    {
-                      scaleX: 1.05,
-                    },
-                    { scaleY: 1.11 },
-                  ],
-                }}
-                resizeMode="stretch"
-                pointerEvents="none"
-              /> */}
               <Image
                 source={require('./bookframe2.png')}
                 style={{

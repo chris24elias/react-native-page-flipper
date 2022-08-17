@@ -3,6 +3,7 @@ import { CustomContainerExample } from '@/screens/CustomContainerExample';
 import { LandscapeExample } from '@/screens/LanscapeExample';
 import { Main } from '@/screens/Main';
 import { PortraitExample } from '@/screens/PortraitExample';
+import { SingleImageDisabledExample } from '@/screens/SingleImageDisabledExample';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
@@ -22,6 +23,7 @@ const Navigation: React.FC<INavigationProps> = ({}) => {
         <Stack.Screen name="LandscapeExample" component={LandscapeExample} />
         <Stack.Screen name="CustomContainerExample" component={CustomContainerExample} />
         <Stack.Screen name="AnimatedExample" component={AnimatedExample} />
+        <Stack.Screen name="SingleImageDisabledExample" component={SingleImageDisabledExample} />
       </Stack.Navigator>
     </NavigationContainer>
   );

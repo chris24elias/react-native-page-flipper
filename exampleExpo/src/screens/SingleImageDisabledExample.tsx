@@ -1,20 +1,20 @@
 import PageFlipper from 'react-native-page-flipper';
 import { Box } from 'native-base';
 import * as React from 'react';
-import { Image, MANGA_PAGES } from '@/utils/Constants';
+import { DOUBLE_PAGES, Image } from '@/utils/Constants';
 
-const PortraitExample = ({}) => {
+const SingleImageDisabledExample = ({}) => {
   return (
     <Box flex={1} bg="white">
       <PageFlipper
-        data={MANGA_PAGES}
+        data={DOUBLE_PAGES}
         pageSize={{
-          height: 334,
-          width: 210,
+          height: 541,
+          width: 1046,
         }}
         enabled={true}
-        singleImageMode={true}
-        portrait={true}
+        singleImageMode={false}
+        portrait={false}
         pressable={true}
         contentContainerStyle={{
           shadowColor: '#000',
@@ -34,4 +34,4 @@ const PortraitExample = ({}) => {
   );
 };
 
-export { PortraitExample };
+export { SingleImageDisabledExample };

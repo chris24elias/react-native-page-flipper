@@ -69,7 +69,7 @@ const AnimatedExample = ({}) => {
     );
   };
   return (
-    <Box flex={1} p="12" bg={'#3498db'}>
+    <Box flex={1} bg={'#3498db'}>
       <PageFlipper
         data={MANGA_PAGES}
         pageSize={{

@@ -51,20 +51,7 @@ const App = () => {
           height: 334, // the size of the images I plan to render (used simply to calculate ratio)
           width: 210,
         }}
-        enabled={true}
-        singleImageMode={true}
         portrait={true}
-        pressable={true}
-        contentContainerStyle={{
-          shadowColor: '#000',
-          shadowOffset: {
-            width: 0,
-            height: 2,
-          },
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-          elevation: 5,
-        }}
         renderPage={(data) => <Image source={{ uri: data }} style={{ height: '100%', width: '100%' }} />}
       />
     )
